@@ -2859,4 +2859,233 @@ mark {
     transition: all var(--transition-slow);
 }
 
+ /* إضافة هذه الأنماط في ملف style.css */
+
+.notifications-panel {
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.notifications-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 15px;
+}
+
+.notification-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.notifications-filter {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 5px 12px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    border-radius: 15px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-btn:hover {
+    background: #f8f9fa;
+}
+
+.filter-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.notifications-list {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 400px;
+    padding-right: 5px;
+}
+
+.notification-item {
+    display: flex;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.notification-item:hover {
+    background: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.notification-item.unread {
+    background: #f0f4ff;
+    border-left: 4px solid #667eea;
+}
+
+.notification-item.notification-success {
+    border-left-color: #10b981;
+}
+
+.notification-item.notification-error {
+    border-left-color: #ef4444;
+}
+
+.notification-item.notification-warning {
+    border-left-color: #f59e0b;
+}
+
+.notification-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 12px;
+    flex-shrink: 0;
+}
+
+.notification-success .notification-icon {
+    background: #dcfce7;
+    color: #10b981;
+}
+
+.notification-error .notification-icon {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.notification-warning .notification-icon {
+    background: #fef3c7;
+    color: #f59e0b;
+}
+
+.notification-info .notification-icon,
+.notification-activity .notification-icon {
+    background: #dbeafe;
+    color: #3b82f6;
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.notification-header h5 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.notification-time {
+    font-size: 11px;
+    color: #6b7280;
+}
+
+.unread-badge {
+    width: 8px;
+    height: 8px;
+    background: #ef4444;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.notification-message {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.4;
+}
+
+.notification-actions {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.notification-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-right: 8px;
+}
+
+.btn-xs {
+    padding: 2px 6px;
+    font-size: 11px;
+    border-radius: 3px;
+}
+
+.btn-ghost {
+    background: transparent;
+    border: none;
+    color: #6b7280;
+}
+
+.btn-ghost:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.empty-notifications {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6b7280;
+}
+
+.empty-notifications i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.notifications-footer {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 15px;
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* شارة الإشعارات في الشريط الجانبي */
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    background: #ef4444;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: bold;
+    animation: pulse 2s infinite;
+}
+
+
+
 /* END OF STYLES */
