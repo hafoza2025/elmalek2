@@ -90,7 +90,7 @@ class AdvancedSalesManagementSystem {
     // PASSWORD PROTECTION SYSTEM
     // =============================================
     
-    async verifyPassword(promptText = 'أدخل كلمة المرور للمتابعة') {
+    async verifyPassword(promptText = 'MMMMMMMMMM') {
         const password = this.data.settings.password;
         if (!password || password.trim() === '') {
             // لا توجد كلمة مرور محددة، السماح بالتنفيذ
@@ -5997,4 +5997,5 @@ console.log(`
 🚀 جاهز للاستخدام الإنتاجي الآمن
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `);
+
 
