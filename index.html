@@ -1521,104 +1521,9 @@
             }, 1500);
         });
     </script>
-    <!-- إضافة هذا في ملف index.html قبل إغلاق body -->
-
-<!-- Login Modal -->
-<div id="loginModal" class="modal login-modal" style="display: flex;">
-    <div class="modal-content modal-sm">
-        <div class="login-container">
-            <div class="login-header">
-                <div class="company-logo">🏷️</div>
-                <h1>Tag ElMalek</h1>
-                <p>نظام إدارة المبيعات والاتفاقات</p>
-            </div>
-            
-            <form id="loginForm" class="login-form">
-                <div class="form-group">
-                    <label>نوع المستخدم:</label>
-                    <select id="userType" class="form-control" onchange="updateLoginFields()">
-                        <option value="admin">مدير النظام</option>
-                        <option value="employee">موظف</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>اسم المستخدم:</label>
-                    <input type="text" id="username" class="form-control" required>
-                    <small class="help-text" id="usernameHelp"></small>
-                </div>
-                
-                <div class="form-group">
-                    <label>كلمة المرور:</label>
-                    <div class="password-input">
-                        <input type="password" id="password" class="form-control" required>
-                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
-                            <i class="fas fa-eye" id="passwordToggleIcon"></i>
-                        </button>
-                    </div>
-                    <small class="help-text" id="passwordHelp"></small>
-                </div>
-                
-                <div class="form-group">
-                    <label class="checkbox-container">
-                        <input type="checkbox" id="rememberMe">
-                        <span class="checkmark"></span>
-                        تذكرني
-                    </label>
-                </div>
-                
-                <button type="submit" class="btn btn-primary btn-block login-btn">
-                    <i class="fas fa-sign-in-alt"></i>
-                    تسجيل الدخول
-                </button>
-                
-                <div class="login-attempts" id="loginAttempts" style="display: none;">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span id="attemptsText"></span>
-                </div>
-            </form>
-            
-            <div class="login-footer">
-                <div class="version-info">
-                    الإصدار 2.0 - مع نظام الصلاحيات
-                </div>
-                <div class="default-accounts">
-                    <h4>حسابات افتراضية للتجربة:</h4>
-                    <div class="account-info">
-                        <strong>المدير:</strong> admin / admin123
-                    </div>
-                    <div class="account-info">
-                        <strong>الموظف:</strong> employee / emp123
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- User Info Bar -->
-<div id="userInfoBar" class="user-info-bar" style="display: none;">
-    <div class="user-details">
-        <div class="user-avatar">
-            <i class="fas fa-user-circle"></i>
-        </div>
-        <div class="user-info">
-            <span class="user-name" id="currentUserName"></span>
-            <span class="user-role" id="currentUserRole"></span>
-        </div>
-    </div>
-    <div class="user-actions">
-        <button class="btn btn-sm btn-outline" onclick="showUserProfile()">
-            <i class="fas fa-user-cog"></i>
-        </button>
-        <button class="btn btn-sm btn-danger" onclick="logout()">
-            <i class="fas fa-sign-out-alt"></i>
-            تسجيل الخروج
-        </button>
-    </div>
-</div>
 
 </body>
 
 
 </html>
+
