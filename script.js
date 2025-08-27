@@ -1,19 +1,19 @@
 /**
  * Tag ElMalek - Advanced Sales Management System
- * Version 2.0 - Complete Enhanced Edition (Clean Version)
+ * Version 2.0 - Complete Enhanced Edition with Advanced Notifications
  * 
  * نظام إدارة المبيعات والاتفاقات المتقدم - Tag ElMalek
- * الإصدار 2.0 - الإصدار المطور الكامل (نسخة نظيفة)
+ * الإصدار 2.0 - الإصدار المطور الكامل مع نظام الإشعارات المتقدم
  * 
  * المميزات:
  * - عمليات CRUD كاملة (إنشاء، قراءة، تحديث، حذف)
  * - فلترة وبحث متقدم
  * - تقارير يومية وأسبوعية وشهرية وسنوية
  * - تكامل التليجرام
+ * - نظام إشعارات متقدم بدون نوافذ منبثقة
  * - نظام النسخ الاحتياطي التلقائي
  * - واجهة مستخدم متقدمة وسريعة الاستجابة
  * - دعم كامل للتواريخ والأوقات
- * - نظام إشعارات متطور
  * - تصدير متعدد الصيغ (JSON, CSV, PDF)
  */
 
@@ -63,7 +63,11 @@ class AdvancedSalesManagementSystem {
         this.charts = {};
         this.notificationCount = 0;
         this.notifications = [];
+        this.maxNotifications = 50;
         this.isOnline = navigator.onLine;
+        
+        // إضافة مخزن دائم للإشعارات
+        this.notificationHistory = [];
         
         // Pagination settings
         this.pagination = {
@@ -93,6 +97,10 @@ class AdvancedSalesManagementSystem {
             
             // Initialize core systems
             await this.loadData();
+            
+            // تحميل الإشعارات من التخزين
+            this.loadNotificationsFromStorage();
+            
             this.setupEventListeners();
             this.setupNavigation();
             this.initCharts();
@@ -119,21 +127,390 @@ class AdvancedSalesManagementSystem {
                                  this.data.contracts.length === 0;
             
             if (isEmptySystem) {
-                this.showToast('مرحباً بك في نظام Tag ElMalek! 🎉\nابدأ بإضافة عملائك ومنتجاتك للبدء', 'success', 6000);
+                this.addInfoNotification('مرحباً بك في نظام Tag ElMalek! ابدأ بإضافة عملائك ومنتجاتك للبدء');
             } else {
-                this.showToast('تم تحميل النظام بنجاح! 🎉', 'success', 3000);
+                this.addSuccessNotification('تم تحميل النظام بنجاح!');
             }
             
             console.log('✅ نظام Tag ElMalek جاهز للاستخدام');
             
         } catch (error) {
             console.error('❌ فشل في تحميل النظام:', error);
-            this.showToast('حدث خطأ في تحميل النظام، يرجى إعادة تحميل الصفحة', 'error', 0);
+            this.addErrorNotification('حدث خطأ في تحميل النظام، يرجى إعادة تحميل الصفحة');
         } finally {
             // Hide loading after delay for better UX
             setTimeout(() => {
                 this.showLoading(false);
             }, 1500);
+        }
+    }
+
+    // =============================================
+    // NOTIFICATION MANAGEMENT SYSTEM
+    // =============================================
+
+    addNotificationToHistory(notification) {
+        // إضافة إشعار جديد في بداية القائمة
+        this.notificationHistory.unshift(notification);
+        
+        // الاحتفاظ بالحد الأقصى من الإشعارات
+        if (this.notificationHistory.length > this.maxNotifications) {
+            this.notificationHistory = this.notificationHistory.slice(0, this.maxNotifications);
+        }
+        
+        // تحديث عداد الإشعارات غير المقروءة
+        this.updateNotificationCount();
+        
+        // حفظ الإشعارات في التخزين المحلي
+        this.saveNotificationsToStorage();
+        
+        // تحديث واجهة الإشعارات إذا كانت مفتوحة
+        this.refreshNotificationPanel();
+        
+        console.log(`📢 ${notification.type}: ${notification.message}`);
+    }
+
+    updateNotificationCount() {
+        const unreadCount = this.notificationHistory.filter(n => !n.read).length;
+        this.notificationCount = unreadCount;
+        this.updateNotificationBadge();
+    }
+
+    saveNotificationsToStorage() {
+        try {
+            localStorage.setItem('tagelmalek_notifications', JSON.stringify(this.notificationHistory));
+        } catch (error) {
+            console.warn('خطأ في حفظ الإشعارات:', error);
+        }
+    }
+
+    loadNotificationsFromStorage() {
+        try {
+            const saved = localStorage.getItem('tagelmalek_notifications');
+            if (saved) {
+                this.notificationHistory = JSON.parse(saved);
+                this.updateNotificationCount();
+            }
+        } catch (error) {
+            console.warn('خطأ في تحميل الإشعارات:', error);
+            this.notificationHistory = [];
+        }
+    }
+
+    // إضافة إشعارات النجاح والأخطاء
+    addSuccessNotification(message) {
+        this.addNotificationToHistory({
+            id: this.generateId('notif'),
+            title: 'تم بنجاح',
+            message,
+            type: 'success',
+            timestamp: new Date().toISOString(),
+            read: false,
+            source: 'success',
+            icon: 'fa-check-circle'
+        });
+    }
+
+    addErrorNotification(message) {
+        this.addNotificationToHistory({
+            id: this.generateId('notif'),
+            title: 'خطأ',
+            message,
+            type: 'error',
+            timestamp: new Date().toISOString(),
+            read: false,
+            source: 'error',
+            icon: 'fa-times-circle'
+        });
+    }
+
+    addWarningNotification(message) {
+        this.addNotificationToHistory({
+            id: this.generateId('notif'),
+            title: 'تحذير',
+            message,
+            type: 'warning',
+            timestamp: new Date().toISOString(),
+            read: false,
+            source: 'warning',
+            icon: 'fa-exclamation-triangle'
+        });
+    }
+
+    addInfoNotification(message) {
+        this.addNotificationToHistory({
+            id: this.generateId('notif'),
+            title: 'معلومة',
+            message,
+            type: 'info',
+            timestamp: new Date().toISOString(),
+            read: false,
+            source: 'info',
+            icon: 'fa-info-circle'
+        });
+    }
+
+    // إضافة إشعارات النشاط
+    addActivityNotification(activity) {
+        const activityMessages = {
+            sale: `مبيعة جديدة - ${activity.data.invoiceNumber}`,
+            contract: `اتفاق جديد - ${activity.data.contractNumber}`,
+            customer: `عميل جديد - ${activity.data.name}`,
+            product: `منتج جديد - ${activity.data.name}`
+        };
+        
+        this.addNotificationToHistory({
+            id: this.generateId('notif'),
+            title: 'نشاط جديد',
+            message: activityMessages[activity.type] || activity.message,
+            type: 'activity',
+            timestamp: new Date().toISOString(),
+            read: false,
+            source: 'activity',
+            icon: 'fa-bell',
+            data: activity.data
+        });
+    }
+
+    refreshNotificationPanel() {
+        // تحديث لوحة الإشعارات إذا كانت مفتوحة
+        const notificationPanel = document.querySelector('.notifications-panel');
+        if (notificationPanel) {
+            // إعادة فتح النافذة مع البيانات الجديدة
+            setTimeout(() => {
+                this.showNotifications();
+            }, 100);
+        }
+    }
+
+    showNotifications() {
+        const totalNotifications = this.notificationHistory.length;
+        const unreadNotifications = this.notificationHistory.filter(n => !n.read);
+        
+        const notificationsHtml = `
+            <div class="notifications-panel">
+                <div class="notifications-header">
+                    <h4>الإشعارات (${unreadNotifications.length} غير مقروء من ${totalNotifications})</h4>
+                    <div class="notification-controls">
+                        <button class="btn btn-sm btn-secondary" onclick="salesSystem.markAllNotificationsRead()" ${unreadNotifications.length === 0 ? 'disabled' : ''}>
+                            <i class="fas fa-check-double"></i> تمييز الكل كمقروء
+                        </button>
+                        <button class="btn btn-sm btn-outline" onclick="salesSystem.clearAllNotifications()">
+                            <i class="fas fa-trash"></i> مسح الكل
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="notifications-filter">
+                    <button class="filter-btn active" onclick="salesSystem.filterNotifications('all')">الكل</button>
+                    <button class="filter-btn" onclick="salesSystem.filterNotifications('unread')">غير مقروء</button>
+                    <button class="filter-btn" onclick="salesSystem.filterNotifications('success')">نجاح</button>
+                    <button class="filter-btn" onclick="salesSystem.filterNotifications('error')">أخطاء</button>
+                    <button class="filter-btn" onclick="salesSystem.filterNotifications('warning')">تحذيرات</button>
+                    <button class="filter-btn" onclick="salesSystem.filterNotifications('activity')">أنشطة</button>
+                </div>
+                
+                <div class="notifications-list" id="notificationsList">
+                    ${this.generateNotificationsHTML(this.notificationHistory)}
+                </div>
+                
+                <div class="notifications-footer">
+                    <button class="btn btn-sm btn-primary" onclick="salesSystem.performHealthCheck()">
+                        <i class="fas fa-sync"></i> فحص النظام
+                    </button>
+                    <small class="text-muted">
+                        آخر تحديث: ${this.formatTime(new Date())}
+                    </small>
+                </div>
+            </div>
+        `;
+
+        this.showModal('مركز الإشعارات', notificationsHtml, 'modal-lg');
+        
+        // تمييز الإشعارات كمقروءة عند الفتح
+        setTimeout(() => {
+            this.markVisibleNotificationsAsRead();
+        }, 1000);
+    }
+
+    generateNotificationsHTML(notifications) {
+        if (notifications.length === 0) {
+            return `
+                <div class="empty-notifications">
+                    <i class="fas fa-bell-slash"></i>
+                    <p>لا توجد إشعارات</p>
+                    <small>ستظهر هنا جميع إشعارات النظام والأنشطة</small>
+                </div>
+            `;
+        }
+        
+        return notifications.map(notification => `
+            <div class="notification-item notification-${notification.type} ${!notification.read ? 'unread' : ''}" 
+                 data-id="${notification.id}" 
+                 data-type="${notification.type}">
+                <div class="notification-icon">
+                    <i class="fas ${notification.icon || this.getNotificationIcon(notification.type)}"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-header">
+                        <h5>${notification.title || this.getNotificationTitle(notification.type)}</h5>
+                        <span class="notification-time">${this.getRelativeTime(new Date(notification.timestamp))}</span>
+                        ${!notification.read ? '<span class="unread-badge"></span>' : ''}
+                    </div>
+                    <p class="notification-message">${notification.message}</p>
+                    <div class="notification-actions">
+                        ${this.generateNotificationActions(notification)}
+                    </div>
+                </div>
+                <div class="notification-controls">
+                    <button class="btn btn-xs btn-ghost" onclick="salesSystem.toggleNotificationRead('${notification.id}')" 
+                            title="${notification.read ? 'تمييز كغير مقروء' : 'تمييز كمقروء'}">
+                        <i class="fas fa-${notification.read ? 'eye-slash' : 'eye'}"></i>
+                    </button>
+                    <button class="btn btn-xs btn-ghost" onclick="salesSystem.deleteNotification('${notification.id}')" title="حذف">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    getNotificationIcon(type) {
+        const icons = {
+            success: 'fa-check-circle',
+            error: 'fa-times-circle',
+            warning: 'fa-exclamation-triangle',
+            info: 'fa-info-circle',
+            activity: 'fa-bell',
+            system: 'fa-cog'
+        };
+        return icons[type] || 'fa-bell';
+    }
+
+    getNotificationTitle(type) {
+        const titles = {
+            success: 'تم بنجاح',
+            error: 'خطأ',
+            warning: 'تحذير',
+            info: 'معلومة',
+            activity: 'نشاط',
+            system: 'النظام'
+        };
+        return titles[type] || 'إشعار';
+    }
+
+    generateNotificationActions(notification) {
+        let actions = '';
+        
+        // إضافة إجراءات حسب نوع الإشعار
+        if (notification.type === 'activity' && notification.data) {
+            if (notification.source === 'sale' || notification.message.includes('مبيعة')) {
+                actions += `<button class="btn btn-xs btn-outline" onclick="salesSystem.viewSaleDetails('${notification.data?.id || ''}')">
+                    <i class="fas fa-eye"></i> عرض التفاصيل
+                </button>`;
+            } else if (notification.source === 'customer' || notification.message.includes('عميل')) {
+                actions += `<button class="btn btn-xs btn-outline" onclick="salesSystem.viewCustomerHistory('${notification.data?.id || ''}')">
+                    <i class="fas fa-user"></i> عرض العميل
+                </button>`;
+            }
+        }
+        
+        if (notification.type === 'warning' && notification.message.includes('مخزون')) {
+            actions += `<button class="btn btn-xs btn-outline" onclick="salesSystem.showLowStockProducts()">
+                <i class="fas fa-boxes"></i> عرض المنتجات
+            </button>`;
+        }
+        
+        return actions;
+    }
+
+    // دوال إدارة الإشعارات
+    filterNotifications(filter) {
+        let filteredNotifications = this.notificationHistory;
+        
+        // إزالة التفعيل من جميع الأزرار
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        
+        // تفعيل الزر المحدد
+        event.target.classList.add('active');
+        
+        switch (filter) {
+            case 'unread':
+                filteredNotifications = this.notificationHistory.filter(n => !n.read);
+                break;
+            case 'success':
+            case 'error':
+            case 'warning':
+            case 'info':
+            case 'activity':
+                filteredNotifications = this.notificationHistory.filter(n => n.type === filter);
+                break;
+            default:
+                filteredNotifications = this.notificationHistory;
+        }
+        
+        const listElement = document.getElementById('notificationsList');
+        if (listElement) {
+            listElement.innerHTML = this.generateNotificationsHTML(filteredNotifications);
+        }
+    }
+
+    toggleNotificationRead(notificationId) {
+        const notification = this.notificationHistory.find(n => n.id === notificationId);
+        if (notification) {
+            notification.read = !notification.read;
+            this.updateNotificationCount();
+            this.saveNotificationsToStorage();
+            this.refreshNotificationPanel();
+        }
+    }
+
+    deleteNotification(notificationId) {
+        this.notificationHistory = this.notificationHistory.filter(n => n.id !== notificationId);
+        this.updateNotificationCount();
+        this.saveNotificationsToStorage();
+        this.refreshNotificationPanel();
+    }
+
+    markAllNotificationsRead() {
+        this.notificationHistory.forEach(notification => {
+            notification.read = true;
+        });
+        this.updateNotificationCount();
+        this.saveNotificationsToStorage();
+        this.refreshNotificationPanel();
+    }
+
+    markVisibleNotificationsAsRead() {
+        const visibleNotifications = document.querySelectorAll('.notification-item.unread');
+        visibleNotifications.forEach(item => {
+            const notificationId = item.dataset.id;
+            const notification = this.notificationHistory.find(n => n.id === notificationId);
+            if (notification) {
+                notification.read = true;
+            }
+        });
+        this.updateNotificationCount();
+        this.saveNotificationsToStorage();
+    }
+
+    clearAllNotifications() {
+        if (this.notificationHistory.length === 0) return;
+        
+        const confirmed = confirm('هل أنت متأكد من حذف جميع الإشعارات؟');
+        if (confirmed) {
+            this.notificationHistory = [];
+            this.updateNotificationCount();
+            this.saveNotificationsToStorage();
+            this.refreshNotificationPanel();
+        }
+    }
+
+    updateNotificationBadge() {
+        const notificationElement = document.getElementById('notificationCount');
+        if (notificationElement) {
+            notificationElement.textContent = this.notificationCount;
+            notificationElement.style.display = this.notificationCount > 0 ? 'flex' : 'none';
         }
     }
 
@@ -162,7 +539,7 @@ class AdvancedSalesManagementSystem {
             
         } catch (error) {
             console.error('خطأ في تحميل البيانات:', error);
-            this.showToast('خطأ في تحميل البيانات، النظام سيعمل بالوضع الافتراضي', 'warning');
+            this.addWarningNotification('خطأ في تحميل البيانات، النظام سيعمل بالوضع الافتراضي');
         }
     }
 
@@ -226,7 +603,7 @@ class AdvancedSalesManagementSystem {
             };
             
             await this.saveData();
-            console.log('✅ تم ترقية البيانات بنجاح');
+            this.addSuccessNotification('تم ترقية البيانات بنجاح');
         }
     }
 
@@ -258,7 +635,7 @@ class AdvancedSalesManagementSystem {
             
         } catch (error) {
             console.error('خطأ في حفظ البيانات:', error);
-            this.showToast('خطأ في حفظ البيانات', 'error');
+            this.addErrorNotification('خطأ في حفظ البيانات');
             return false;
         }
     }
@@ -281,12 +658,12 @@ class AdvancedSalesManagementSystem {
         // Online/offline events
         window.addEventListener('online', () => {
             this.isOnline = true;
-            this.showToast('تم الاتصال بالإنترنت', 'success', 2000);
+            this.addSuccessNotification('تم الاتصال بالإنترنت');
         });
         
         window.addEventListener('offline', () => {
             this.isOnline = false;
-            this.showToast('انقطع الاتصال بالإنترنت - النظام يعمل بوضع عدم الاتصال', 'warning', 3000);
+            this.addWarningNotification('انقطع الاتصال بالإنترنت - النظام يعمل بوضع عدم الاتصال');
         });
         
         console.log('📡 تم تفعيل مستمعي الأحداث');
@@ -463,7 +840,7 @@ class AdvancedSalesManagementSystem {
                     case 's':
                         e.preventDefault();
                         this.saveData();
-                        this.showToast('تم حفظ البيانات', 'success', 1500);
+                        this.addSuccessNotification('تم حفظ البيانات');
                         break;
                     case 'n':
                         e.preventDefault();
@@ -603,7 +980,7 @@ class AdvancedSalesManagementSystem {
             
             // Validate form
             if (!this.validateForm(form)) {
-                this.showToast('يرجى تصحيح الأخطاء في النموذج', 'error');
+                this.addErrorNotification('يرجى تصحيح الأخطاء في النموذج');
                 return;
             }
             
@@ -615,7 +992,7 @@ class AdvancedSalesManagementSystem {
             
         } catch (error) {
             console.error(`خطأ في معالجة نموذج ${type}:`, error);
-            this.showToast(error.message || `خطأ في ${this.getTypeName(type)}`, 'error');
+            this.addErrorNotification(error.message || `خطأ في ${this.getTypeName(type)}`);
         } finally {
             this.showLoading(false);
         }
@@ -705,7 +1082,14 @@ class AdvancedSalesManagementSystem {
 💳 طريقة الدفع: ${this.getPaymentMethodName(paymentMethod)}
 📅 التاريخ: ${this.formatDate(sale.date)}`);
         
-        this.showToast('تم إضافة المبيعة بنجاح', 'success');
+        // إضافة إشعارات النظام الجديد
+        this.addSuccessNotification('تم إضافة المبيعة بنجاح');
+        this.addActivityNotification({
+            type: 'sale',
+            message: `مبيعة جديدة - ${sale.invoiceNumber}`,
+            data: sale
+        });
+        
         form.reset();
     }
 
@@ -787,14 +1171,14 @@ class AdvancedSalesManagementSystem {
 💰 المبلغ الجديد: ${this.formatCurrency(sale.total)}
 💰 المبلغ السابق: ${this.formatCurrency(oldTotal)}`);
         
-        this.showToast('تم تحديث المبيعة بنجاح', 'success');
+        this.addSuccessNotification('تم تحديث المبيعة بنجاح');
         this.resetEditMode();
     }
 
     editSale(saleId) {
         const sale = this.data.sales.find(s => s.id === saleId);
         if (!sale) {
-            this.showToast('المبيعة غير موجودة', 'error');
+            this.addErrorNotification('المبيعة غير موجودة');
             return;
         }
 
@@ -841,7 +1225,7 @@ class AdvancedSalesManagementSystem {
 
         const saleIndex = this.data.sales.findIndex(s => s.id === saleId);
         if (saleIndex === -1) {
-            this.showToast('المبيعة غير موجودة', 'error');
+            this.addErrorNotification('المبيعة غير موجودة');
             return;
         }
 
@@ -874,13 +1258,13 @@ class AdvancedSalesManagementSystem {
 👤 العميل: ${sale.customerName}
 💰 المبلغ المحذوف: ${this.formatCurrency(sale.total)}`);
         
-        this.showToast('تم حذف المبيعة بنجاح', 'success');
+        this.addSuccessNotification('تم حذف المبيعة بنجاح');
     }
 
     duplicateSale(saleId) {
         const sale = this.data.sales.find(s => s.id === saleId);
         if (!sale) {
-            this.showToast('المبيعة غير موجودة', 'error');
+            this.addErrorNotification('المبيعة غير موجودة');
             return;
         }
 
@@ -898,13 +1282,13 @@ class AdvancedSalesManagementSystem {
 
         this.calculateSaleTotal();
         this.openModal('saleModal');
-        this.showToast('تم نسخ بيانات المبيعة. يمكنك التعديل والحفظ', 'info');
+        this.addInfoNotification('تم نسخ بيانات المبيعة. يمكنك التعديل والحفظ');
     }
 
     viewSaleDetails(saleId) {
         const sale = this.data.sales.find(s => s.id === saleId);
         if (!sale) {
-            this.showToast('المبيعة غير موجودة', 'error');
+            this.addErrorNotification('المبيعة غير موجودة');
             return;
         }
 
@@ -975,7 +1359,7 @@ class AdvancedSalesManagementSystem {
     printInvoice(saleId) {
         const sale = this.data.sales.find(s => s.id === saleId);
         if (!sale) {
-            this.showToast('المبيعة غير موجودة', 'error');
+            this.addErrorNotification('المبيعة غير موجودة');
             return;
         }
 
@@ -1189,6 +1573,8 @@ class AdvancedSalesManagementSystem {
         setTimeout(() => {
             printWindow.print();
         }, 1000);
+        
+        this.addSuccessNotification('تم إرسال الفاتورة للطباعة');
     }
 
     // =============================================
@@ -1246,7 +1632,13 @@ class AdvancedSalesManagementSystem {
 ⏰ المدة: ${duration} شهر
 📅 من: ${this.formatDate(startDate)} إلى: ${this.formatDate(endDate)}`);
         
-        this.showToast('تم إضافة الاتفاق بنجاح', 'success');
+        this.addSuccessNotification('تم إضافة الاتفاق بنجاح');
+        this.addActivityNotification({
+            type: 'contract',
+            message: `اتفاق جديد - ${contract.contractNumber}`,
+            data: contract
+        });
+        
         form.reset();
     }
 
@@ -1299,14 +1691,14 @@ class AdvancedSalesManagementSystem {
 💰 القيمة الجديدة: ${this.formatCurrency(value)}
 💰 القيمة السابقة: ${this.formatCurrency(oldValue)}`);
         
-        this.showToast('تم تحديث الاتفاق بنجاح', 'success');
+        this.addSuccessNotification('تم تحديث الاتفاق بنجاح');
         this.resetEditMode();
     }
 
     editContract(contractId) {
         const contract = this.data.contracts.find(c => c.id === contractId);
         if (!contract) {
-            this.showToast('الاتفاق غير موجود', 'error');
+            this.addErrorNotification('الاتفاق غير موجود');
             return;
         }
 
@@ -1349,7 +1741,7 @@ class AdvancedSalesManagementSystem {
 
         const contractIndex = this.data.contracts.findIndex(c => c.id === contractId);
         if (contractIndex === -1) {
-            this.showToast('الاتفاق غير موجود', 'error');
+            this.addErrorNotification('الاتفاق غير موجود');
             return;
         }
 
@@ -1365,13 +1757,13 @@ class AdvancedSalesManagementSystem {
 👤 العميل: ${contract.customerName}
 💰 القيمة: ${this.formatCurrency(contract.value)}`);
         
-        this.showToast('تم حذف الاتفاق بنجاح', 'success');
+        this.addSuccessNotification('تم حذف الاتفاق بنجاح');
     }
 
     viewContractDetails(contractId) {
         const contract = this.data.contracts.find(c => c.id === contractId);
         if (!contract) {
-            this.showToast('الاتفاق غير موجود', 'error');
+            this.addErrorNotification('الاتفاق غير موجود');
             return;
         }
 
@@ -1441,7 +1833,7 @@ class AdvancedSalesManagementSystem {
     printContract(contractId) {
         const contract = this.data.contracts.find(c => c.id === contractId);
         if (!contract) {
-            this.showToast('الاتفاق غير موجود', 'error');
+            this.addErrorNotification('الاتفاق غير موجود');
             return;
         }
 
@@ -1590,6 +1982,8 @@ class AdvancedSalesManagementSystem {
         setTimeout(() => {
             printWindow.print();
         }, 1000);
+        
+        this.addSuccessNotification('تم إرسال الاتفاق للطباعة');
     }
 
     // =============================================
@@ -1654,7 +2048,13 @@ class AdvancedSalesManagementSystem {
 📧 البريد: ${email || 'غير محدد'}
 📅 تاريخ التسجيل: ${this.formatDate(customer.registrationDate)}`);
         
-        this.showToast('تم إضافة العميل بنجاح', 'success');
+        this.addSuccessNotification('تم إضافة العميل بنجاح');
+        this.addActivityNotification({
+            type: 'customer',
+            message: `عميل جديد - ${customer.name}`,
+            data: customer
+        });
+        
         form.reset();
     }
 
@@ -1711,14 +2111,14 @@ class AdvancedSalesManagementSystem {
 📱 الهاتف: ${phone}
 🏢 الشركة: ${company || 'غير محدد'}`);
         
-        this.showToast('تم تحديث بيانات العميل بنجاح', 'success');
+        this.addSuccessNotification('تم تحديث بيانات العميل بنجاح');
         this.resetEditMode();
     }
 
     editCustomer(customerId) {
         const customer = this.data.customers.find(c => c.id === customerId);
         if (!customer) {
-            this.showToast('العميل غير موجود', 'error');
+            this.addErrorNotification('العميل غير موجود');
             return;
         }
 
@@ -1755,7 +2155,7 @@ class AdvancedSalesManagementSystem {
         const hasContracts = this.data.contracts.some(c => c.customerId === customerId);
 
         if (hasSales || hasContracts) {
-            this.showToast('لا يمكن حذف العميل لوجود مبيعات أو اتفاقات مرتبطة به', 'error');
+            this.addErrorNotification('لا يمكن حذف العميل لوجود مبيعات أو اتفاقات مرتبطة به');
             return;
         }
 
@@ -1768,7 +2168,7 @@ class AdvancedSalesManagementSystem {
 
         const customerIndex = this.data.customers.findIndex(c => c.id === customerId);
         if (customerIndex === -1) {
-            this.showToast('العميل غير موجود', 'error');
+            this.addErrorNotification('العميل غير موجود');
             return;
         }
 
@@ -1784,13 +2184,13 @@ class AdvancedSalesManagementSystem {
 📝 الاسم: ${customer.name}
 📱 الهاتف: ${customer.phone}`);
         
-        this.showToast('تم حذف العميل بنجاح', 'success');
+        this.addSuccessNotification('تم حذف العميل بنجاح');
     }
 
     viewCustomerHistory(customerId) {
         const customer = this.data.customers.find(c => c.id === customerId);
         if (!customer) {
-            this.showToast('العميل غير موجود', 'error');
+            this.addErrorNotification('العميل غير موجود');
             return;
         }
 
@@ -1989,12 +2389,12 @@ class AdvancedSalesManagementSystem {
     async sendCustomerReport(customerId) {
         const customer = this.data.customers.find(c => c.id === customerId);
         if (!customer) {
-            this.showToast('العميل غير موجود', 'error');
+            this.addErrorNotification('العميل غير موجود');
             return;
         }
 
         if (!this.isOnline) {
-            this.showToast('يتطلب الاتصال بالإنترنت لإرسال التقرير', 'warning');
+            this.addWarningNotification('يتطلب الاتصال بالإنترنت لإرسال التقرير');
             return;
         }
 
@@ -2021,7 +2421,7 @@ class AdvancedSalesManagementSystem {
 🏷️ تم إنشاؤه بواسطة نظام Tag ElMalek`;
 
         await this.sendTelegramNotification(report);
-        this.showToast('تم إرسال تقرير العميل بنجاح', 'success');
+        this.addSuccessNotification('تم إرسال تقرير العميل بنجاح');
     }
 
     calculateMembershipPeriod(registrationDate) {
@@ -2068,7 +2468,8 @@ class AdvancedSalesManagementSystem {
         }
 
         const product = {
-            id: this.generateId('prod'),
+            id: this
+.generateId('prod'),
             name,
             code,
             price,
@@ -2096,7 +2497,13 @@ class AdvancedSalesManagementSystem {
 📊 الكمية: ${stock}
 📂 الفئة: ${category}`);
         
-        this.showToast('تم إضافة المنتج بنجاح', 'success');
+        this.addSuccessNotification('تم إضافة المنتج بنجاح');
+        this.addActivityNotification({
+            type: 'product',
+            message: `منتج جديد - ${product.name}`,
+            data: product
+        });
+        
         form.reset();
     }
 
@@ -2149,14 +2556,14 @@ class AdvancedSalesManagementSystem {
 💰 السعر: ${this.formatCurrency(price)}
 📊 الكمية: ${stock}`);
         
-        this.showToast('تم تحديث بيانات المنتج بنجاح', 'success');
+        this.addSuccessNotification('تم تحديث بيانات المنتج بنجاح');
         this.resetEditMode();
     }
 
     editProduct(productId) {
         const product = this.data.products.find(p => p.id === productId);
         if (!product) {
-            this.showToast('المنتج غير موجود', 'error');
+            this.addErrorNotification('المنتج غير موجود');
             return;
         }
 
@@ -2193,7 +2600,7 @@ class AdvancedSalesManagementSystem {
         const hasSales = this.data.sales.some(s => s.productId === productId);
 
         if (hasSales) {
-            this.showToast('لا يمكن حذف المنتج لوجود مبيعات مرتبطة به', 'error');
+            this.addErrorNotification('لا يمكن حذف المنتج لوجود مبيعات مرتبطة به');
             return;
         }
 
@@ -2206,7 +2613,7 @@ class AdvancedSalesManagementSystem {
 
         const productIndex = this.data.products.findIndex(p => p.id === productId);
         if (productIndex === -1) {
-            this.showToast('المنتج غير موجود', 'error');
+            this.addErrorNotification('المنتج غير موجود');
             return;
         }
 
@@ -2222,13 +2629,13 @@ class AdvancedSalesManagementSystem {
 🏷️ الكود: ${product.code}
 💰 السعر: ${this.formatCurrency(product.price)}`);
         
-        this.showToast('تم حذف المنتج بنجاح', 'success');
+        this.addSuccessNotification('تم حذف المنتج بنجاح');
     }
 
     adjustStock(productId) {
         const product = this.data.products.find(p => p.id === productId);
         if (!product) {
-            this.showToast('المنتج غير موجود', 'error');
+            this.addErrorNotification('المنتج غير موجود');
             return;
         }
 
@@ -2283,7 +2690,6 @@ class AdvancedSalesManagementSystem {
                 function toggleAdjustmentReason() {
                     const type = document.getElementById('adjustmentType').value;
                     const reasonSelect = document.getElementById('adjustmentReason');
-                    const quantityInput = document.getElementById('adjustmentQuantity');
                     
                     if (type === 'add') {
                         reasonSelect.innerHTML = \`
@@ -2365,7 +2771,7 @@ class AdvancedSalesManagementSystem {
         const notes = document.getElementById('adjustmentNotes').value;
 
         if (!quantity || quantity <= 0) {
-            this.showToast('يرجى إدخال كمية صحيحة', 'error');
+            this.addErrorNotification('يرجى إدخال كمية صحيحة');
             return;
         }
 
@@ -2421,13 +2827,13 @@ class AdvancedSalesManagementSystem {
 📊 المخزون الجديد: ${newStock}
 💭 السبب: ${reason}`);
 
-        this.showToast(`تم ${typeText} المخزون بنجاح`, 'success');
+        this.addSuccessNotification(`تم ${typeText} المخزون بنجاح`);
     }
 
     viewProductSales(productId) {
         const product = this.data.products.find(p => p.id === productId);
         if (!product) {
-            this.showToast('المنتج غير موجود', 'error');
+            this.addErrorNotification('المنتج غير موجود');
             return;
         }
 
@@ -3045,13 +3451,15 @@ class AdvancedSalesManagementSystem {
     // =============================================
 
     initCharts() {
-        this.initSalesChart();
+        if (typeof Chart !== 'undefined') {
+            this.initSalesChart();
+        }
         console.log('📊 المخططات البيانية جاهزة');
     }
 
     initSalesChart() {
         const ctx = document.getElementById('salesChart');
-        if (!ctx) return;
+        if (!ctx || typeof Chart === 'undefined') return;
 
         this.charts.salesChart = new Chart(ctx, {
             type: 'line',
@@ -3176,7 +3584,7 @@ class AdvancedSalesManagementSystem {
 
         const activities = [];
         
-        // Recent sales (last 5)
+        // Recent sales (last 3)
         const recentSales = [...this.data.sales]
             .sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))
             .slice(0, 3);
@@ -3598,7 +4006,7 @@ ${message}
             
             if (issues.length > 0) {
                 console.warn('⚠️ مشاكل في سلامة البيانات:', issues);
-                this.showToast(`تم اكتشاف ${issues.length} مشكلة في البيانات`, 'warning');
+                this.addWarningNotification(`تم اكتشاف ${issues.length} مشكلة في البيانات`);
             } else {
                 console.log('✅ فحص الصحة: جميع البيانات سليمة');
             }
@@ -3626,6 +4034,9 @@ ${message}
                 action: () => this.showLowStockProducts()
             });
             notificationCount += lowStockProducts.length;
+            
+            // إضافة إشعار للنظام الجديد
+            this.addWarningNotification(`${lowStockProducts.length} منتج يحتاج إعادة تموين`);
         }
         
         if (outOfStockProducts.length > 0) {
@@ -3636,6 +4047,9 @@ ${message}
                 action: () => this.showOutOfStockProducts()
             });
             notificationCount += outOfStockProducts.length;
+            
+            // إضافة إشعار للنظام الجديد
+            this.addErrorNotification(`${outOfStockProducts.length} منتج نفد مخزونه`);
         }
         
         // Check for expiring contracts
@@ -3652,6 +4066,9 @@ ${message}
                 action: () => this.showExpiringContracts()
             });
             notificationCount += expiringContracts.length;
+            
+            // إضافة إشعار للنظام الجديد
+            this.addWarningNotification(`${expiringContracts.length} اتفاق ينتهي قريباً`);
         }
         
         // Update notification count
@@ -3666,14 +4083,6 @@ ${message}
         }
     }
 
-    updateNotificationBadge() {
-        const notificationElement = document.getElementById('notificationCount');
-        if (notificationElement) {
-            notificationElement.textContent = this.notificationCount;
-            notificationElement.style.display = this.notificationCount > 0 ? 'flex' : 'none';
-        }
-    }
-
     checkLowStock(product) {
         if (this.data.settings.notifications.lowStock) {
             this.sendTelegramNotification(`⚠️ تحذير مخزون منخفض
@@ -3682,6 +4091,9 @@ ${message}
 📊 المخزون الحالي: ${product.stock}
 📉 الحد الأدنى: ${product.minStock}
 🔄 يحتاج إعادة تموين فوري`);
+            
+            // إضافة إشعار للنظام الجديد
+            this.addWarningNotification(`المنتج ${product.name} يحتاج إعادة تموين - المخزون: ${product.stock}`);
         }
     }
 
@@ -3949,64 +4361,6 @@ ${message}
                 overlay.style.animation = 'fadeIn 0.3s ease';
             }
         }
-    }
-
-    showToast(message, type = 'info', duration = 4000) {
-        const toastContainer = document.querySelector('.toast-container') || this.createToastContainer();
-        
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        
-        const icons = {
-            success: 'fa-check-circle',
-            error: 'fa-times-circle',
-            warning: 'fa-exclamation-triangle',
-            info: 'fa-info-circle'
-        };
-        
-        const colors = {
-            success: '#10b981',
-            error: '#ef4444',
-            warning: '#f59e0b',
-            info: '#3b82f6'
-        };
-        
-        toast.innerHTML = `
-            <div class="toast-header">
-                <i class="fas ${icons[type]} toast-icon" style="color: ${colors[type]};"></i>
-                <span class="toast-title">إشعار</span>
-                <span class="toast-time">${new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</span>
-                <button class="toast-close" onclick="this.parentElement.parentElement.remove()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="toast-body">${message}</div>
-        `;
-        
-        toastContainer.appendChild(toast);
-        
-        // Auto remove if duration is set
-        if (duration > 0) {
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.classList.add('fade-out');
-                    setTimeout(() => toast.remove(), 300);
-                }
-            }, duration);
-        }
-        
-        // Add click to dismiss
-        toast.addEventListener('click', () => {
-            toast.classList.add('fade-out');
-            setTimeout(() => toast.remove(), 300);
-        });
-    }
-
-    createToastContainer() {
-        const container = document.createElement('div');
-        container.className = 'toast-container';
-        document.body.appendChild(container);
-        return container;
     }
 
     async showConfirmDialog(message, title = 'تأكيد') {
@@ -4279,7 +4633,7 @@ ${message}
             link.download = `TagElMalek_Export_${new Date().toISOString().split('T')[0]}.json`;
             link.click();
             
-            this.showToast('تم تصدير البيانات بنجاح', 'success');
+            this.addSuccessNotification('تم تصدير البيانات بنجاح');
             
             // Send backup notification
             await this.sendTelegramNotification(`💾 تم إنشاء نسخة احتياطية
@@ -4291,7 +4645,7 @@ ${message}
             
         } catch (error) {
             console.error('خطأ في تصدير البيانات:', error);
-            this.showToast('خطأ في تصدير البيانات', 'error');
+            this.addErrorNotification('خطأ في تصدير البيانات');
         }
     }
 
@@ -4341,7 +4695,7 @@ ${message}
                         this.updateAllSections();
                         this.populateAllSelects();
                         
-                        this.showToast('تم استيراد البيانات بنجاح', 'success');
+                        this.addSuccessNotification('تم استيراد البيانات بنجاح');
                         
                         // Send import notification
                         await this.sendTelegramNotification(`📥 تم استيراد البيانات
@@ -4359,7 +4713,7 @@ ${message}
                 
             } catch (error) {
                 console.error('خطأ في استيراد البيانات:', error);
-                this.showToast('خطأ في استيراد البيانات: ' + error.message, 'error');
+                this.addErrorNotification('خطأ في استيراد البيانات: ' + error.message);
             } finally {
                 this.showLoading(false);
             }
@@ -4404,7 +4758,7 @@ ${message}
         const chatId = document.getElementById('chatId')?.value.trim();
 
         if (!botToken || !chatId) {
-            this.showToast('يرجى ملء جميع الحقول', 'warning');
+            this.addWarningNotification('يرجى ملء جميع الحقول');
             return;
         }
 
@@ -4412,7 +4766,7 @@ ${message}
         this.data.settings.chatId = chatId;
         
         await this.saveData();
-        this.showToast('تم حفظ إعدادات التليجرام بنجاح', 'success');
+        this.addSuccessNotification('تم حفظ إعدادات التليجرام بنجاح');
         
         console.log('💾 تم حفظ إعدادات التليجرام');
     }
@@ -4422,12 +4776,12 @@ ${message}
         const chatId = document.getElementById('chatId')?.value.trim();
 
         if (!botToken || !chatId) {
-            this.showToast('يرجى ملء البيانات أولاً', 'warning');
+            this.addWarningNotification('يرجى ملء البيانات أولاً');
             return;
         }
 
         if (!this.isOnline) {
-            this.showToast('يتطلب الاتصال بالإنترنت لاختبار الاتصال', 'warning');
+            this.addWarningNotification('يتطلب الاتصال بالإنترنت لاختبار الاتصال');
             return;
         }
 
@@ -4455,14 +4809,14 @@ ${message}
             });
 
             if (response.ok) {
-                this.showToast('تم اختبار الاتصال بنجاح! تحقق من التليجرام', 'success', 5000);
+                this.addSuccessNotification('تم اختبار الاتصال بنجاح! تحقق من التليجرام');
             } else {
                 const errorData = await response.json();
                 throw new Error(errorData.description || 'فشل الاتصال');
             }
         } catch (error) {
             console.error('خطأ في اختبار الاتصال:', error);
-            this.showToast('فشل في اختبار الاتصال: ' + error.message, 'error');
+            this.addErrorNotification('فشل في اختبار الاتصال: ' + error.message);
         } finally {
             this.showLoading(false);
         }
@@ -4481,7 +4835,7 @@ ${message}
         this.data.settings.notifications = notifications;
         await this.saveData();
         
-        this.showToast('تم حفظ إعدادات الإشعارات بنجاح', 'success');
+        this.addSuccessNotification('تم حفظ إعدادات الإشعارات بنجاح');
         console.log('🔔 تم حفظ إعدادات الإشعارات');
     }
 
@@ -4520,7 +4874,7 @@ ${message}
         const saleIds = Array.from(checkboxes).map(cb => cb.value);
         
         if (saleIds.length === 0) {
-            this.showToast('يرجى تحديد مبيعات للحذف', 'warning');
+            this.addWarningNotification('يرجى تحديد مبيعات للحذف');
             return;
         }
 
@@ -4568,11 +4922,11 @@ ${message}
 📊 عدد المبيعات المحذوفة: ${deletedCount}
 💰 إجمالي المبلغ المحذوف: ${this.formatCurrency(totalAmount)}`);
 
-            this.showToast(`تم حذف ${deletedCount} مبيعة بنجاح`, 'success');
+            this.addSuccessNotification(`تم حذف ${deletedCount} مبيعة بنجاح`);
 
         } catch (error) {
             console.error('خطأ في الحذف الجماعي:', error);
-            this.showToast('حدث خطأ أثناء الحذف الجماعي', 'error');
+            this.addErrorNotification('حدث خطأ أثناء الحذف الجماعي');
         } finally {
             this.showLoading(false);
         }
@@ -4644,58 +4998,6 @@ ${message}
     createBackup() {
         this.exportData();
     }
-
-    showNotifications() {
-        const notificationsHtml = `
-            <div class="notifications-panel">
-                <div class="notifications-header">
-                    <h4>الإشعارات (${this.notificationCount})</h4>
-                    <button class="btn btn-sm btn-secondary" onclick="salesSystem.markAllNotificationsRead()">
-                        تمييز الكل كمقروء
-                    </button>
-                </div>
-                
-                <div class="notifications-list">
-                    ${this.notifications && this.notifications.length > 0 ? 
-                        this.notifications.map(notification => `
-                            <div class="notification-item notification-${notification.type}">
-                                <div class="notification-icon">
-                                    <i class="fas fa-${notification.type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
-                                </div>
-                                <div class="notification-content">
-                                    <h5>${notification.title}</h5>
-                                    <p>${notification.message}</p>
-                                    <div class="notification-actions">
-                                        <button class="btn btn-sm btn-primary" onclick="notification.action && notification.action(); salesSystem.closeDynamicModal('notifications')">
-                                            عرض التفاصيل
-                                        </button>
-                                        <small class="notification-time">منذ قليل</small>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('') :
-                        '<div class="empty-notifications"><i class="fas fa-bell-slash"></i><p>لا توجد إشعارات جديدة</p><small>ستظهر هنا التنبيهات المهمة مثل انخفاض المخزون</small></div>'
-                    }
-                </div>
-                
-                <div class="notifications-footer">
-                    <button class="btn btn-sm btn-outline" onclick="salesSystem.performHealthCheck()">
-                        <i class="fas fa-sync"></i> فحص النظام
-                    </button>
-                </div>
-            </div>
-        `;
-
-        this.showModal('الإشعارات', notificationsHtml, 'modal-lg');
-    }
-
-    markAllNotificationsRead() {
-        this.notificationCount = 0;
-        this.notifications = [];
-        this.updateNotificationBadge();
-        this.closeDynamicModal('notifications');
-        this.showToast('تم تمييز جميع الإشعارات كمقروءة', 'success', 2000);
-    }
 }
 
 // =============================================
@@ -4720,7 +5022,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         window.addEventListener('error', (event) => {
             console.error('خطأ في النظام:', event.error);
             if (salesSystem) {
-                salesSystem.showToast('حدث خطأ في النظام، يرجى إعادة تحميل الصفحة', 'error', 0);
+                salesSystem.addErrorNotification('حدث خطأ في النظام، يرجى إعادة تحميل الصفحة');
             }
         });
         
@@ -4815,7 +5117,7 @@ function toggleSidebar() {
 function refreshDashboard() {
     if (window.salesSystem) {
         window.salesSystem.updateDashboard();
-        window.salesSystem.showToast('تم تحديث لوحة التحكم', 'success', 1500);
+        window.salesSystem.addSuccessNotification('تم تحديث لوحة التحكم');
     }
 }
 
@@ -4873,39 +5175,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-console.log(`
-🏷️ Tag ElMalek Advanced Sales Management System v2.0
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ النظام محمل ومجهز للاستخدام (نسخة نظيفة)
-📱 واجهة مستجيبة وسريعة
-🔧 مميزات متقدمة ومحسنة
-💾 حفظ تلقائي كل 3 دقائق
-🔔 نظام إشعارات متكامل
-📊 تقارير وإحصائيات متقدمة
-🔒 نسخ احتياطي آمن
-📱 دعم تكامل التليجرام
-🚀 نسخة نظيفة بدون بيانات تجريبية
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-`);
-
-// Export for module systems
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = AdvancedSalesManagementSystem;
-}
-
-// Add polyfills for older browsers
-if (!Element.prototype.closest) {
-    Element.prototype.closest = function(s) {
-        var el = this;
-        do {
-            if (el.matches(s)) return el;
-            el = el.parentElement || el.parentNode;
-        } while (el !== null && el.nodeType === 1);
-        return null;
-    };
-}
-
-// Add event listeners for keyboard shortcuts
+// Add keyboard shortcuts
 document.addEventListener('keydown', function(e) {
     // Alt + key combinations for quick navigation
     if (e.altKey) {
@@ -5019,43 +5289,6 @@ animations.textContent = `
         100% { transform: scale(1); }
     }
     
-    .toast {
-        animation: slideInRight 0.3s ease;
-    }
-    
-    .toast.fade-out {
-        animation: fadeOutModal 0.3s ease forwards;
-    }
-    
-    .loading-spinner {
-        animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-    
-    .notification-badge {
-        animation: pulse 2s infinite;
-    }
-    
-    .low-stock-row {
-        background-color: #fff3cd !important;
-    }
-    
-    .out-of-stock-row {
-        background-color: #f8d7da !important;
-    }
-    
-    .contract-expiring {
-        background-color: #fff3cd !important;
-    }
-    
-    .contract-expired {
-        background-color: #f8d7da !important;
-    }
-    
     .activity-item:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -5076,6 +5309,243 @@ animations.textContent = `
         background-color: #f8f9fa;
         transition: all 0.2s ease;
     }
+    
+    .low-stock-row {
+        background-color: #fff3cd !important;
+    }
+    
+    .out-of-stock-row {
+        background-color: #f8d7da !important;
+    }
+    
+    .contract-expiring {
+        background-color: #fff3cd !important;
+    }
+    
+    .contract-expired {
+        background-color: #f8d7da !important;
+    }
+    
+    .notification-badge {
+        animation: pulse 2s infinite;
+    }
+    
+    .loading-spinner {
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Notification System Styles */
+    .notifications-panel {
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .notifications-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e2e8f0;
+        margin-bottom: 15px;
+    }
+
+    .notification-controls {
+        display: flex;
+        gap: 8px;
+    }
+
+    .notifications-filter {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+
+    .filter-btn {
+        padding: 5px 12px;
+        border: 1px solid #e2e8f0;
+        background: white;
+        border-radius: 15px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .filter-btn:hover {
+        background: #f8f9fa;
+    }
+
+    .filter-btn.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+
+    .notifications-list {
+        flex: 1;
+        overflow-y: auto;
+        max-height: 400px;
+        padding-right: 5px;
+    }
+
+    .notification-item {
+        display: flex;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s;
+        position: relative;
+    }
+
+    .notification-item:hover {
+        background: #f8f9fa;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .notification-item.unread {
+        background: #f0f4ff;
+        border-left: 4px solid #667eea;
+    }
+
+    .notification-item.notification-success {
+        border-left-color: #10b981;
+    }
+
+    .notification-item.notification-error {
+        border-left-color: #ef4444;
+    }
+
+    .notification-item.notification-warning {
+        border-left-color: #f59e0b;
+    }
+
+    .notification-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 12px;
+        flex-shrink: 0;
+    }
+
+    .notification-success .notification-icon {
+        background: #dcfce7;
+        color: #10b981;
+    }
+
+    .notification-error .notification-icon {
+        background: #fee2e2;
+        color: #ef4444;
+    }
+
+    .notification-warning .notification-icon {
+        background: #fef3c7;
+        color: #f59e0b;
+    }
+
+    .notification-info .notification-icon,
+    .notification-activity .notification-icon {
+        background: #dbeafe;
+        color: #3b82f6;
+    }
+
+    .notification-content {
+        flex: 1;
+    }
+
+    .notification-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 5px;
+    }
+
+    .notification-header h5 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .notification-time {
+        font-size: 11px;
+        color: #6b7280;
+    }
+
+    .unread-badge {
+        width: 8px;
+        height: 8px;
+        background: #ef4444;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+
+    .notification-message {
+        margin: 0 0 8px 0;
+        font-size: 13px;
+        color: #374151;
+        line-height: 1.4;
+    }
+
+    .notification-actions {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+
+    .notification-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        margin-right: 8px;
+    }
+
+    .btn-xs {
+        padding: 2px 6px;
+        font-size: 11px;
+        border-radius: 3px;
+    }
+
+    .btn-ghost {
+        background: transparent;
+        border: none;
+        color: #6b7280;
+    }
+
+    .btn-ghost:hover {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+    .empty-notifications {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6b7280;
+    }
+
+    .empty-notifications i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+
+    .notifications-footer {
+        border-top: 1px solid #e2e8f0;
+        padding-top: 15px;
+        margin-top: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 `;
 document.head.appendChild(animations);
 
@@ -5090,10 +5560,8 @@ window.onerror = function(msg, url, lineNo, columnNo, error) {
     });
     
     if (window.salesSystem) {
-        window.salesSystem.showToast(
-            'حدث خطأ في النظام. تم حفظ التفاصيل في سجل الأخطاء.', 
-            'error', 
-            5000
+        window.salesSystem.addErrorNotification(
+            'حدث خطأ في النظام. تم حفظ التفاصيل في سجل الأخطاء.'
         );
     }
     
@@ -5134,7 +5602,7 @@ function detectConnectionSpeed() {
         if (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g') {
             console.warn('اتصال بطيء تم اكتشافه');
             if (window.salesSystem) {
-                window.salesSystem.showToast('تم اكتشاف اتصال بطيء. قد تكون الاستجابة أبطأ من المعتاد.', 'warning', 5000);
+                window.salesSystem.addWarningNotification('تم اكتشاف اتصال بطيء. قد تكون الاستجابة أبطأ من المعتاد.');
             }
         }
     }
@@ -5212,7 +5680,7 @@ function checkDataIntegrity() {
     if (issues.length > 0) {
         console.error('مشاكل في سلامة البيانات:', issues);
         if (window.salesSystem) {
-            window.salesSystem.showToast(`تم اكتشاف ${issues.length} مشكلة في البيانات`, 'warning');
+            window.salesSystem.addWarningNotification(`تم اكتشاف ${issues.length} مشكلة في البيانات`);
         }
     }
 }
@@ -5228,10 +5696,8 @@ function checkStorageQuota() {
             if (usedPercent > 80) {
                 console.warn(`تحذير مساحة التخزين: ${usedPercent.toFixed(1)}% مستخدمة`);
                 if (window.salesSystem) {
-                    window.salesSystem.showToast(
-                        'مساحة التخزين تقترب من النفاد. يرجى تصدير البيانات وتنظيف السجلات القديمة.', 
-                        'warning', 
-                        10000
+                    window.salesSystem.addWarningNotification(
+                        'مساحة التخزين تقترب من النفاد. يرجى تصدير البيانات وتنظيف السجلات القديمة.'
                     );
                 }
             }
@@ -5318,11 +5784,6 @@ function enhanceRTLSupport() {
             direction: ltr;
         }
         
-        .toast-container {
-            left: 20px;
-            right: auto;
-        }
-        
         .sidebar {
             right: 0;
             left: auto;
@@ -5367,7 +5828,7 @@ function toggleTheme() {
     if (window.salesSystem) {
         window.salesSystem.data.settings.theme = newTheme;
         window.salesSystem.saveData();
-        window.salesSystem.showToast(`تم التبديل إلى الوضع ${newTheme === 'dark' ? 'الليلي' : 'النهاري'}`, 'success', 2000);
+        window.salesSystem.addSuccessNotification(`تم التبديل إلى الوضع ${newTheme === 'dark' ? 'الليلي' : 'النهاري'}`);
     }
 }
 
@@ -5376,6 +5837,23 @@ initThemeManager();
 
 // Make theme toggle globally available
 window.toggleTheme = toggleTheme;
+
+// Export for module systems
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = AdvancedSalesManagementSystem;
+}
+
+// Add polyfills for older browsers
+if (!Element.prototype.closest) {
+    Element.prototype.closest = function(s) {
+        var el = this;
+        do {
+            if (el.matches(s)) return el;
+            el = el.parentElement || el.parentNode;
+        } while (el !== null && el.nodeType === 1);
+        return null;
+    };
+}
 
 // Add final system ready indicator
 window.addEventListener('load', function() {
@@ -5392,6 +5870,7 @@ window.addEventListener('load', function() {
 ✅ اختصارات لوحة المفاتيح
 ✅ نظام النسخ الاحتياطي
 ✅ تكامل التليجرام
+✅ نظام الإشعارات المتقدم
 
 🚀 نظام Tag ElMalek جاهز للاستخدام الإنتاجي!
         `);
@@ -5413,4 +5892,19 @@ if ('serviceWorker' in navigator) {
         console.log('🔧 Service Worker جاهز للتفعيل في الإصدارات المستقبلية');
     });
 }
+
+console.log(`
+🏷️ Tag ElMalek Advanced Sales Management System v2.0
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ النظام محمل ومجهز للاستخدام (نسخة نظيفة)
+📱 واجهة مستجيبة وسريعة
+🔧 مميزات متقدمة ومحسنة
+💾 حفظ تلقائي كل 3 دقائق
+🔔 نظام إشعارات متكامل (بدون منبثقات)
+📊 تقارير وإحصائيات متقدمة
+🔒 نسخ احتياطي آمن
+📱 دعم تكامل التليجرام
+🚀 نسخة نظيفة بدون بيانات تجريبية
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`);
 
