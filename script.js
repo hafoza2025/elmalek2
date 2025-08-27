@@ -90,199 +90,144 @@ class AdvancedSalesManagementSystem {
     // PASSWORD PROTECTION SYSTEM
     // =============================================
     
- async verifyPassword(promptText = 'أدخل كلمة المرور للمتابعة') {
-    const password = this.data.settings.password;
-    if (!password || password.trim() === '') {
-        // لا توجد كلمة مرور محددة، السماح بالتنفيذ
-        return true;
-    }
-    
-    return new Promise((resolve) => {
-        const modalId = 'passwordModal_' + Date.now();
+    async verifyPassword(action = 'تنفيذ هذا الإجراء') {
+        const password = this.data.settings.password;
+        if (!password || password.trim() === '') {
+            return true; // لا توجد حماية مفعلة
+        }
         
-        // إنشاء العنصر مباشرة بدلاً من HTML string
-        const modal = document.createElement('div');
-        modal.id = modalId;
-        modal.className = 'modal';
-        modal.style.cssText = 'display: block; z-index: 10000;';
-        
-        // إنشاء محتوى النافذة
-        const modalContent = document.createElement('div');
-        modalContent.className = 'modal-content modal-sm';
-        modalContent.style.cssText = `
-            animation: fadeInModal 0.3s ease;
-            border-radius: 12px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        `;
-        
-        // Header
-        const header = document.createElement('div');
-        header.className = 'modal-header';
-        header.innerHTML = `
-            <h3 style="color: #667eea; margin: 0;">
-                <i class="fas fa-lock"></i> الحماية الأمنية
-            </h3>
-        `;
-        
-        // Body
-        const body = document.createElement('div');
-        body.className = 'modal-body';
-        
-        // Message
-        const message = document.createElement('p');
-        message.style.cssText = 'margin-bottom: 15px; color: #374151; font-weight: 500;';
-        message.innerHTML = `
-            <i class="fas fa-shield-alt" style="color: #f59e0b; margin-left: 8px;"></i>
-            ${promptText}
-        `;
-        
-        // Input container
-        const inputContainer = document.createElement('div');
-        inputContainer.style.cssText = 'position: relative; margin-bottom: 15px;';
-        
-        // Password input
-        const passwordInput = document.createElement('input');
-        passwordInput.type = 'password';
-        passwordInput.id = `adminPasswordInput_${modalId}`;
-        passwordInput.className = 'form-control';
-        passwordInput.placeholder = 'كلمة المرور...';
-        passwordInput.style.cssText = 'padding: 12px; font-size: 16px; border-radius: 8px; border: 2px solid #e2e8f0; width: 100%; box-sizing: border-box;';
-        passwordInput.autofocus = true;
-        
-        // Toggle button
-        const toggleButton = document.createElement('button');
-        toggleButton.type = 'button';
-        toggleButton.style.cssText = 'position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #6b7280; cursor: pointer;';
-        toggleButton.innerHTML = '<i class="fas fa-eye"></i>';
-        
-        // Error message
-        const errorDiv = document.createElement('div');
-        errorDiv.id = `passwordError_${modalId}`;
-        errorDiv.style.cssText = 'color: #ef4444; font-size: 13px; margin-top: 8px; display: none; padding: 8px; background: #fef2f2; border-radius: 4px; border-left: 4px solid #ef4444;';
-        errorDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <span>كلمة المرور غير صحيحة!</span>';
-        
-        // Footer
-        const footer = document.createElement('div');
-        footer.className = 'modal-footer';
-        
-        // Confirm button
-        const confirmBtn = document.createElement('button');
-        confirmBtn.className = 'btn btn-primary';
-        confirmBtn.style.cssText = 'padding: 10px 20px; font-weight: 600; margin-left: 8px;';
-        confirmBtn.innerHTML = '<i class="fas fa-check"></i> تأكيد';
-        
-        // Cancel button
-        const cancelBtn = document.createElement('button');
-        cancelBtn.className = 'btn btn-secondary';
-        cancelBtn.style.cssText = 'padding: 10px 20px;';
-        cancelBtn.innerHTML = '<i class="fas fa-times"></i> إلغاء';
-        
-        // إضافة CSS
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes fadeInModal {
-                from { opacity: 0; transform: scale(0.9); }
-                to { opacity: 1; transform: scale(1); }
-            }
-            @keyframes shake {
-                0%, 100% { transform: translateX(0); }
-                10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-                20%, 40%, 60%, 80% { transform: translateX(5px); }
-            }
-        `;
-        
-        // تجميع العناصر
-        inputContainer.appendChild(passwordInput);
-        inputContainer.appendChild(toggleButton);
-        
-        body.appendChild(message);
-        body.appendChild(inputContainer);
-        body.appendChild(errorDiv);
-        
-        footer.appendChild(confirmBtn);
-        footer.appendChild(cancelBtn);
-        
-        modalContent.appendChild(header);
-        modalContent.appendChild(body);
-        modalContent.appendChild(footer);
-        
-        modal.appendChild(modalContent);
-        
-        // إضافة النافذة والستايل للصفحة
-        document.head.appendChild(style);
-        document.body.appendChild(modal);
-        document.body.style.overflow = 'hidden';
-        
-        // الأحداث
-        
-        // إظهار/إخفاء كلمة المرور
-        toggleButton.addEventListener('click', function() {
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                toggleButton.innerHTML = '<i class="fas fa-eye-slash"></i>';
-            } else {
-                passwordInput.type = 'password';
-                toggleButton.innerHTML = '<i class="fas fa-eye"></i>';
-            }
-        });
-        
-        // دالة التحقق
-        const checkPassword = function() {
-            if (passwordInput.value === password) {
-                modal.remove();
-                style.remove();
-                document.body.style.overflow = '';
-                resolve(true);
-            } else {
-                const errorText = passwordInput.value.trim() === '' ? 
-                    'يرجى إدخال كلمة المرور!' : 'كلمة المرور غير صحيحة!';
-                errorDiv.querySelector('span').textContent = errorText;
-                errorDiv.style.display = 'block';
-                passwordInput.focus();
-                passwordInput.select();
+        return new Promise((resolve) => {
+            // إنشاء النافذة
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.5); z-index: 10000; display: flex;
+                align-items: center; justify-content: center; direction: rtl;
+            `;
+            
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                background: white; border-radius: 12px; padding: 30px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3); max-width: 400px;
+                width: 90%; text-align: center; animation: fadeIn 0.3s ease;
+            `;
+            
+            modal.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <i class="fas fa-lock" style="font-size: 48px; color: #667eea; margin-bottom: 15px;"></i>
+                    <h3 style="color: #333; margin: 0 0 10px 0;">تأكيد الهوية</h3>
+                    <p style="color: #666; margin: 0;">أدخل كلمة المرور لـ ${action}</p>
+                </div>
                 
-                // اهتزاز بصري
-                passwordInput.style.animation = 'shake 0.5s ease-in-out';
-                setTimeout(() => {
-                    passwordInput.style.animation = '';
-                }, 500);
+                <div style="margin-bottom: 20px;">
+                    <input type="password" id="passwordField" 
+                           placeholder="كلمة المرور..." 
+                           style="width: 100%; padding: 15px; border: 2px solid #ddd; 
+                                  border-radius: 8px; font-size: 16px; text-align: center;
+                                  box-sizing: border-box;" autofocus>
+                    <div id="errorMsg" style="color: #e74c3c; margin-top: 10px; 
+                                              font-size: 14px; display: none;">
+                        كلمة المرور غير صحيحة!
+                    </div>
+                </div>
+                
+                <div>
+                    <button id="confirmBtn" style="background: #e74c3c; color: white; 
+                                                  border: none; padding: 12px 25px; 
+                                                  border-radius: 6px; margin-left: 10px;
+                                                  cursor: pointer; font-size: 16px;">
+                        <i class="fas fa-check"></i> تأكيد
+                    </button>
+                    <button id="cancelBtn" style="background: #95a5a6; color: white; 
+                                                 border: none; padding: 12px 25px; 
+                                                 border-radius: 6px; cursor: pointer; 
+                                                 font-size: 16px;">
+                        <i class="fas fa-times"></i> إلغاء
+                    </button>
+                </div>
+            `;
+            
+            // إضافة CSS للأنيميشن
+            if (!document.getElementById('passwordModalCSS')) {
+                const style = document.createElement('style');
+                style.id = 'passwordModalCSS';
+                style.textContent = `
+                    @keyframes fadeIn {
+                        from { opacity: 0; transform: scale(0.9); }
+                        to { opacity: 1; transform: scale(1); }
+                    }
+                    @keyframes shake {
+                        0%, 100% { transform: translateX(0); }
+                        25% { transform: translateX(-5px); }
+                        75% { transform: translateX(5px); }
+                    }
+                `;
+                document.head.appendChild(style);
             }
-        };
-        
-        // دالة الإلغاء
-        const cancelPassword = function() {
-            modal.remove();
-            style.remove();
-            document.body.style.overflow = '';
-            resolve(false);
-        };
-        
-        // ربط الأحداث
-        confirmBtn.addEventListener('click', checkPassword);
-        cancelBtn.addEventListener('click', cancelPassword);
-        
-        // دعم لوحة المفاتيح
-        passwordInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                checkPassword();
-            } else if (e.key === 'Escape') {
-                e.preventDefault();
-                cancelPassword();
-            }
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            document.body.style.overflow = 'hidden';
+            
+            // العناصر
+            const input = modal.querySelector('#passwordField');
+            const error = modal.querySelector('#errorMsg');
+            const confirmBtn = modal.querySelector('#confirmBtn');
+            const cancelBtn = modal.querySelector('#cancelBtn');
+            
+            // دالة التحقق
+            const checkPassword = () => {
+                if (input.value === password) {
+                    overlay.remove();
+                    document.body.style.overflow = '';
+                    resolve(true);
+                } else {
+                    error.style.display = 'block';
+                    error.textContent = input.value ? 'كلمة المرور غير صحيحة!' : 'يرجى إدخال كلمة المرور!';
+                    input.style.animation = 'shake 0.5s';
+                    input.style.borderColor = '#e74c3c';
+                    input.focus();
+                    input.select();
+                    setTimeout(() => {
+                        input.style.animation = '';
+                        input.style.borderColor = '#ddd';
+                    }, 500);
+                }
+            };
+            
+            // دالة الإلغاء
+            const cancel = () => {
+                overlay.remove();
+                document.body.style.overflow = '';
+                resolve(false);
+            };
+            
+            // الأحداث
+            confirmBtn.onclick = checkPassword;
+            cancelBtn.onclick = cancel;
+            overlay.onclick = (e) => {
+                if (e.target === overlay) cancel();
+            };
+            
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    checkPassword();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancel();
+                }
+            };
+            
+            input.oninput = () => {
+                error.style.display = 'none';
+                input.style.borderColor = '#ddd';
+            };
+            
+            // تركيز تلقائي
+            setTimeout(() => input.focus(), 100);
         });
-        
-        // إخفاء رسالة الخطأ عند الكتابة
-        passwordInput.addEventListener('input', function() {
-            errorDiv.style.display = 'none';
-        });
-        
-        // تركيز تلقائي
-        setTimeout(() => {
-            passwordInput.focus();
-        }, 100);
-    });
-}
+    }
 
     // =============================================
     // SYSTEM INITIALIZATION
@@ -1218,7 +1163,7 @@ class AdvancedSalesManagementSystem {
 
     async addSale(form) {
         // التحقق من كلمة المرور
-        if (!(await this.verifyPassword('أدخل كلمة المرور لإضافة مبيعة جديدة'))) {
+        if (!(await this.verifyPassword('إضافة مبيعة جديدة'))) {
             this.addWarningNotification('تم إلغاء إضافة المبيعة');
             return;
         }
@@ -1306,7 +1251,7 @@ class AdvancedSalesManagementSystem {
 
     async updateSale(saleId, form) {
         // التحقق من كلمة المرور
-        if (!(await this.verifyPassword('أدخل كلمة المرور لتعديل المبيعة'))) {
+        if (!(await this.verifyPassword('تعديل المبيعة'))) {
             this.addWarningNotification('تم إلغاء تعديل المبيعة');
             return;
         }
@@ -1433,8 +1378,8 @@ class AdvancedSalesManagementSystem {
     }
 
     async deleteSale(saleId) {
-        // التحقق من كلمة المرور
-        if (!(await this.verifyPassword('أدخل كلمة المرور لحذف المبيعة'))) {
+        // طلب كلمة المرور قبل الحذف
+        if (!(await this.verifyPassword('حذف هذه المبيعة'))) {
             this.addWarningNotification('تم إلغاء حذف المبيعة');
             return;
         }
@@ -1806,7 +1751,7 @@ class AdvancedSalesManagementSystem {
 
     async addContract(form) {
         // التحقق من كلمة المرور
-        if (!(await this.verifyPassword('أدخل كلمة المرور لإضافة اتفاق جديد'))) {
+        if (!(await this.verifyPassword('إضافة اتفاق جديد'))) {
             this.addWarningNotification('تم إلغاء إضافة الاتفاق');
             return;
         }
@@ -1873,7 +1818,7 @@ class AdvancedSalesManagementSystem {
 
     async updateContract(contractId, form) {
         // التحقق من كلمة المرور
-        if (!(await this.verifyPassword('أدخل كلمة المرور لتعديل الاتفاق'))) {
+        if (!(await this.verifyPassword('تعديل الاتفاق'))) {
             this.addWarningNotification('تم إلغاء تعديل الاتفاق');
             return;
         }
@@ -1967,8 +1912,8 @@ class AdvancedSalesManagementSystem {
     }
 
     async deleteContract(contractId) {
-        // التحقق من كلمة المرور
-        if (!(await this.verifyPassword('أدخل كلمة المرور لحذف الاتفاق'))) {
+        // طلب كلمة المرور قبل الحذف
+        if (!(await this.verifyPassword('حذف هذا الاتفاق'))) {
             this.addWarningNotification('تم إلغاء حذف الاتفاق');
             return;
         }
@@ -2391,6 +2336,12 @@ class AdvancedSalesManagementSystem {
     }
 
     async deleteCustomer(customerId) {
+        // طلب كلمة المرور قبل الحذف
+        if (!(await this.verifyPassword('حذف هذا العميل'))) {
+            this.addWarningNotification('تم إلغاء حذف العميل');
+            return;
+        }
+
         // Check relationships
         const hasSales = this.data.sales.some(s => s.customerId === customerId);
         const hasContracts = this.data.contracts.some(c => c.customerId === customerId);
@@ -2513,7 +2464,7 @@ class AdvancedSalesManagementSystem {
                                         <td>${contract.contractNumber}</td>
                                         <td>${contract.type}</td>
                                         <td>${this.formatCurrency(contract.value)}</td>
-                                        <td>${this.formatDate(contract                        .startDate)}</td>
+                                        <td>${this.formatDate(contract.startDate)}</td>
                                         <td>${this.formatDate(contract.endDate)}</td>
                                         <td>
                                             <span class="status-badge status-${contract.status === 'نشط' ? 'active' : 'completed'}">
@@ -2689,7 +2640,7 @@ class AdvancedSalesManagementSystem {
 
     async addProduct(form) {
         // التحقق من كلمة المرور
-        if (!(await this.verifyPassword('أدخل كلمة المرور لإضافة منتج جديد'))) {
+        if (!(await this.verifyPassword('إضافة منتج جديد'))) {
             this.addWarningNotification('تم إلغاء إضافة المنتج');
             return;
         }
@@ -2755,7 +2706,7 @@ class AdvancedSalesManagementSystem {
 
     async updateProduct(productId, form) {
         // التحقق من كلمة المرور
-        if (!(await this.verifyPassword('أدخل كلمة المرور لتعديل المنتج'))) {
+        if (!(await this.verifyPassword('تعديل المنتج'))) {
             this.addWarningNotification('تم إلغاء تعديل المنتج');
             return;
         }
@@ -2848,8 +2799,8 @@ class AdvancedSalesManagementSystem {
     }
 
     async deleteProduct(productId) {
-        // التحقق من كلمة المرور
-        if (!(await this.verifyPassword('أدخل كلمة المرور لحذف المنتج'))) {
+        // طلب كلمة المرور قبل الحذف
+        if (!(await this.verifyPassword('حذف هذا المنتج'))) {
             this.addWarningNotification('تم إلغاء حذف المنتج');
             return;
         }
@@ -3021,7 +2972,7 @@ class AdvancedSalesManagementSystem {
 
     async applyStockAdjustment(productId) {
         // التحقق من كلمة المرور
-        if (!(await this.verifyPassword('أدخل كلمة المرور لتعديل المخزون'))) {
+        if (!(await this.verifyPassword('تعديل المخزون'))) {
             this.addWarningNotification('تم إلغاء تعديل المخزون');
             return;
         }
@@ -4713,496 +4664,155 @@ ${message}
     }
 
     calculateContractEndDate() {
-        const startDate = document.getElementById('contractStartDate')?.value;
-        const duration = parseInt(document.getElementById('contractDuration')?.value);
+        const startDate = document.getElementById('contractStartDate')?.
+        value;
+        const duration = parseInt(document.getElementById('contractDuration')?.value) || 0;
         
-        if (startDate && duration) {
-            const start = new Date(startDate);
-            const end = this.addMonths(start, duration);
-            const endInput = document.getElementById('contractEndDate');
-            if (endInput) {
-                endInput.value = end.toISOString().split('T')[0];
+        if (startDate && duration > 0) {
+            const endDate = this.addMonths(new Date(startDate), duration);
+            const endDateElement = document.getElementById('contractEndDate');
+            
+            if (endDateElement) {
+                endDateElement.value = endDate.toISOString().split('T')[0];
+            }
+            
+            // Show contract period info
+            const periodElement = document.getElementById('contractPeriodInfo');
+            if (periodElement) {
+                periodElement.textContent = `فترة الاتفاق: ${this.formatDate(startDate)} - ${this.formatDate(endDate.toISOString().split('T')[0])} (${duration} شهر)`;
             }
         }
     }
 
     // =============================================
-    // DATA POPULATION METHODS
+    // SEARCH AND FILTER METHODS
     // =============================================
 
-    populateAllSelects() {
-        this.populateCustomerSelects();
-        this.populateProductSelects();
+    performAdvancedSearch(type, searchTerm) {
+        if (!searchTerm.trim()) {
+            this.updateSectionData(type);
+            return;
+        }
+
+        const searchResults = this.searchData(type, searchTerm);
+        this.updateTableWithResults(type, searchResults);
+        
+        // Update search info
+        const countElement = document.getElementById(`${type}Count`);
+        if (countElement) {
+            countElement.textContent = `نتائج البحث: ${searchResults.length}`;
+        }
     }
 
-    populateCustomerSelects() {
-        const selects = ['saleCustomer', 'contractCustomer'];
-        selects.forEach(selectId => {
-            const select = document.getElementById(selectId);
-            if (select) {
-                const currentValue = select.value;
-                select.innerHTML = '<option value="">اختر العميل</option>';
+    searchData(type, term) {
+        const data = this.data[type === 'sales' ? 'sales' : type];
+        if (!data || !Array.isArray(data)) return [];
+
+        const searchTerm = term.toLowerCase().trim();
+        
+        return data.filter(item => {
+            switch (type) {
+                case 'sales':
+                    return (
+                        item.invoiceNumber?.toLowerCase().includes(searchTerm) ||
+                        item.customerName?.toLowerCase().includes(searchTerm) ||
+                        item.productName?.toLowerCase().includes(searchTerm) ||
+                        item.paymentMethod?.toLowerCase().includes(searchTerm)
+                    );
                 
-                this.data.customers
-                    .sort((a, b) => a.name.localeCompare(b.name))
-                    .forEach(customer => {
-                        const option = document.createElement('option');
-                        option.value = customer.id;
-                        option.textContent = `${customer.name}${customer.company ? ` - ${customer.company}` : ''}`;
-                        if (customer.id === currentValue) option.selected = true;
-                        select.appendChild(option);
-                    });
+                case 'contracts':
+                    return (
+                        item.contractNumber?.toLowerCase().includes(searchTerm) ||
+                        item.customerName?.toLowerCase().includes(searchTerm) ||
+                        item.type?.toLowerCase().includes(searchTerm) ||
+                        item.status?.toLowerCase().includes(searchTerm)
+                    );
+                
+                case 'customers':
+                    return (
+                        item.name?.toLowerCase().includes(searchTerm) ||
+                        item.phone?.includes(searchTerm) ||
+                        item.email?.toLowerCase().includes(searchTerm) ||
+                        item.company?.toLowerCase().includes(searchTerm)
+                    );
+                
+                case 'products':
+                    return (
+                        item.name?.toLowerCase().includes(searchTerm) ||
+                        item.code?.toLowerCase().includes(searchTerm) ||
+                        item.category?.toLowerCase().includes(searchTerm) ||
+                        item.description?.toLowerCase().includes(searchTerm)
+                    );
+                
+                default:
+                    return false;
             }
         });
     }
 
-    populateProductSelects() {
-        const select = document.getElementById('saleProduct');
-        if (select) {
-            const currentValue = select.value;
-            select.innerHTML = '<option value="">اختر المنتج</option>';
-            
-            this.data.products
-                .filter(product => product.stock > 0)
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .forEach(product => {
-                    const option = document.createElement('option');
-                    option.value = product.id;
-                    option.textContent = `${product.name} - ${product.code} (${product.stock} ${product.unit} متاح)`;
-                    option.dataset.price = product.price;
-                    if (product.id === currentValue) option.selected = true;
-                    select.appendChild(option);
-                });
-        }
+    updateTableWithResults(type, results) {
+        const tbody = document.getElementById(`${type}TableBody`);
+        if (!tbody) return;
+
+        // Store original data temporarily
+        const originalData = [...this.data[type === 'sales' ? 'sales' : type]];
+        
+        // Replace with search results
+        this.data[type === 'sales' ? 'sales' : type] = results;
+        
+        // Update table
+        this[`update${this.capitalize(type)}Table`]();
+        
+        // Restore original data
+        this.data[type === 'sales' ? 'sales' : type] = originalData;
     }
 
-    updateSectionData(sectionId) {
-        switch (sectionId) {
-            case 'dashboard':
-                this.updateDashboard();
-                break;
-            case 'sales':
-                this.updateSalesTable();
-                this.populateAllSelects();
-                break;
-            case 'contracts':
-                this.updateContractsTable();
-                this.populateCustomerSelects();
-                break;
-            case 'customers':
-                this.updateCustomersTable();
-                break;
-            case 'products':
-                this.updateProductsTable();
-                break;
-            case 'reports':
-                this.loadReportsSection();
-                break;
-            case 'settings':
-                this.loadSettingsSection();
-                break;
-        }
+    filterByDateRange(type, fromDate, toDate) {
+        this.currentDateFilter = { fromDate, toDate };
+        this[`update${this.capitalize(type)}Table`]();
     }
 
-    loadReportsSection() {
-        // Initialize reports when section is loaded
-        console.log('📊 تحميل قسم التقارير');
-    }
-
-    loadSettingsSection() {
-        // Load current settings into form
-        this.loadSettings();
-        console.log('⚙️ تحميل قسم الإعدادات');
+    clearFilters(type) {
+        this.currentDateFilter = null;
+        const searchInput = document.getElementById(`${type}Search`);
+        if (searchInput) searchInput.value = '';
+        
+        this[`update${this.capitalize(type)}Table`]();
     }
 
     // =============================================
-    // SEARCH AND FILTER FUNCTIONALITY
+    // BULK OPERATIONS
     // =============================================
 
-    performAdvancedSearch(section, query) {
-        const tableBodyId = `${section}TableBody`;
-        const tbody = document.getElementById(tableBodyId);
-        
-        if (!tbody || !query.trim()) {
-            // If no query, refresh the table
-            this[`update${section.charAt(0).toUpperCase() + section.slice(1)}Table`]();
-            return;
-        }
-
-        const searchFields = this.getSearchFields(section);
-        const searchTerms = query.toLowerCase().split(' ').filter(term => term.length > 0);
-        
-        let data = this.data[section] || [];
-        
-        // Filter data based on search terms
-        const filteredData = data.filter(item => {
-            return searchTerms.every(term => {
-                return searchFields.some(field => {
-                    const value = this.getNestedValue(item, field);
-                    return value && value.toString().toLowerCase().includes(term);
-                });
-            });
-        });
-
-        // Update table with filtered data
-        this.updateTableWithFilteredData(section, filteredData);
-    }
-
-    getSearchFields(section) {
-        const fieldMap = {
-            sales: ['invoiceNumber', 'customerName', 'productName', 'notes'],
-            contracts: ['contractNumber', 'customerName', 'type', 'details'],
-            customers: ['name', 'phone', 'email', 'company', 'address'],
-            products: ['name', 'code', 'category', 'description']
-        };
-        
-        return fieldMap[section] || [];
-    }
-
-    getNestedValue(obj, path) {
-        return path.split('.').reduce((current, key) => current && current[key], obj);
-    }
-
-    updateTableWithFilteredData(section, filteredData) {
-        // This is a simplified version - you'd implement the full table update logic here
-        console.log(`تصفية ${section}:`, filteredData.length, 'نتيجة');
-    }
-
-    // =============================================
-    // EXPORT AND BACKUP FUNCTIONALITY
-    // =============================================
-
-    async exportData() {
-        // التحقق من كلمة المرور
-        if (!(await this.verifyPassword('أدخل كلمة المرور لتصدير البيانات'))) {
-            this.addWarningNotification('تم إلغاء تصدير البيانات');
-            return;
-        }
-
-        try {
-            const exportData = {
-                ...this.data,
-                exportInfo: {
-                    exportDate: new Date().toISOString(),
-                    version
-                : this.version,
-                    exportedBy: 'Tag ElMalek System',
-                    totalRecords: {
-                        sales: this.data.sales.length,
-                        contracts: this.data.contracts.length,
-                        customers: this.data.customers.length,
-                        products: this.data.products.length
-                    }
-                }
-            };
-
-            const dataStr = JSON.stringify(exportData, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json;charset=utf-8' });
-            
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(dataBlob);
-            link.download = `TagElMalek_Export_${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
-            
-            this.addSuccessNotification('تم تصدير البيانات بنجاح');
-            
-            // Send backup notification
-            await this.sendTelegramNotification(`💾 تم إنشاء نسخة احتياطية
-📊 المبيعات: ${this.data.sales.length}
-📝 الاتفاقات: ${this.data.contracts.length}
-👥 العملاء: ${this.data.customers.length}
-📦 المنتجات: ${this.data.products.length}
-💿 حجم البيانات: ${(dataBlob.size / 1024).toFixed(1)} كيلوبايت`);
-            
-        } catch (error) {
-            console.error('خطأ في تصدير البيانات:', error);
-            this.addErrorNotification('خطأ في تصدير البيانات');
-        }
-    }
-
-    async importData() {
-        // التحقق من كلمة المرور
-        if (!(await this.verifyPassword('أدخل كلمة المرور لاستيراد البيانات'))) {
-            this.addWarningNotification('تم إلغاء استيراد البيانات');
-            return;
-        }
-
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-        input.onchange = async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            try {
-                this.showLoading(true);
-                const text = await file.text();
-                const importedData = JSON.parse(text);
-                
-                // Validate data structure
-                const requiredKeys = ['sales', 'contracts', 'customers', 'products'];
-                const hasValidStructure = requiredKeys.every(key => Array.isArray(importedData[key]));
-                
-                if (!hasValidStructure) {
-                    throw new Error('هيكل البيانات غير صحيح');
-                }
-
-                const confirmed = await this.showConfirmDialog(
-                    `هل أنت متأكد من استيراد البيانات؟ سيتم استبدال البيانات الحالية.
-                    
-                    البيانات المستوردة:
-                    • المبيعات: ${importedData.sales.length}
-                    • الاتفاقات: ${importedData.contracts.length}
-                    • العملاء: ${importedData.customers.length}
-                    • المنتجات: ${importedData.products.length}`,
-                    'تأكيد الاستيراد'
-                );
-
-                if (confirmed) {
-                    // Backup current data
-                    const backupData = { ...this.data };
-                    
-                    try {
-                        // Import new data
-                        this.data = { ...this.data, ...importedData };
-                        this.data.metadata.importDate = new Date().toISOString();
-                        this.data.metadata.version = this.version;
-                        
-                        await this.saveData();
-                        this.updateAllSections();
-                        this.populateAllSelects();
-                        
-                        this.addSuccessNotification('تم استيراد البيانات بنجاح');
-                        
-                        // Send import notification
-                        await this.sendTelegramNotification(`📥 تم استيراد البيانات
-📊 المبيعات: ${this.data.sales.length}
-📝 الاتفاقات: ${this.data.contracts.length}
-👥 العملاء: ${this.data.customers.length}
-📦 المنتجات: ${this.data.products.length}`);
-                        
-                    } catch (error) {
-                        // Restore backup on error
-                        this.data = backupData;
-                        throw error;
-                    }
-                }
-                
-            } catch (error) {
-                console.error('خطأ في استيراد البيانات:', error);
-                this.addErrorNotification('خطأ في استيراد البيانات: ' + error.message);
-            } finally {
-                this.showLoading(false);
-            }
-        };
-        input.click();
-    }
-
-    // =============================================
-    // SETTINGS MANAGEMENT
-    // =============================================
-
-    loadSettings() {
-        // Load Telegram settings
-        const botTokenInput = document.getElementById('botToken');
-        const chatIdInput = document.getElementById('chatId');
-        
-        if (botTokenInput) botTokenInput.value = this.data.settings.botToken || '';
-        if (chatIdInput) chatIdInput.value = this.data.settings.chatId || '';
-        
-        // Load password setting
-        const passwordInput = document.getElementById('adminPassword');
-        if (passwordInput) passwordInput.value = this.data.settings.password || '';
-        
-        // Load notification settings
-        const notificationCheckboxes = [
-            'telegramNotifications',
-            'notifySales',
-            'notifyContracts',
-            'notifyCustomers',
-            'notifyLowStock'
-        ];
-        
-        notificationCheckboxes.forEach(checkboxId => {
-            const checkbox = document.getElementById(checkboxId);
-            if (checkbox) {
-                const setting = checkboxId.replace('notify', '').toLowerCase();
-                checkbox.checked = this.data.settings.notifications[setting] !== false;
-            }
-        });
-        
-        console.log('⚙️ تم تحميل الإعدادات');
-    }
-
-    async saveTelegramSettings() {
-        // التحقق من كلمة المرور
-        if (!(await this.verifyPassword('أدخل كلمة المرور لحفظ إعدادات التليجرام'))) {
-            this.addWarningNotification('تم إلغاء حفظ الإعدادات');
-            return;
-        }
-
-        const botToken = document.getElementById('botToken')?.value.trim();
-        const chatId = document.getElementById('chatId')?.value.trim();
-
-        if (!botToken || !chatId) {
-            this.addWarningNotification('يرجى ملء جميع الحقول');
-            return;
-        }
-
-        this.data.settings.botToken = botToken;
-        this.data.settings.chatId = chatId;
-        
-        await this.saveData();
-        this.addSuccessNotification('تم حفظ إعدادات التليجرام بنجاح');
-        
-        console.log('💾 تم حفظ إعدادات التليجرام');
-    }
-
-    async testTelegramConnection() {
-        const botToken = document.getElementById('botToken')?.value.trim();
-        const chatId = document.getElementById('chatId')?.value.trim();
-
-        if (!botToken || !chatId) {
-            this.addWarningNotification('يرجى ملء البيانات أولاً');
-            return;
-        }
-
-        if (!this.isOnline) {
-            this.addWarningNotification('يتطلب الاتصال بالإنترنت لاختبار الاتصال');
-            return;
-        }
-
-        try {
-            this.showLoading(true);
-            
-            const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-            const testMessage = `🧪 اختبار الاتصال بنجاح!
-
-🏷️ نظام Tag ElMalek v${this.version}
-📅 ${this.formatDateTime(new Date())}
-✅ الاتصال يعمل بشكل مثالي
-🚀 النظام جاهز لإرسال الإشعارات`;
-
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    chat_id: chatId,
-                    text: testMessage,
-                    parse_mode: 'HTML'
-                })
-            });
-
-            if (response.ok) {
-                this.addSuccessNotification('تم اختبار الاتصال بنجاح! تحقق من التليجرام');
-            } else {
-                const errorData = await response.json();
-                throw new Error(errorData.description || 'فشل الاتصال');
-            }
-        } catch (error) {
-            console.error('خطأ في اختبار الاتصال:', error);
-            this.addErrorNotification('فشل في اختبار الاتصال: ' + error.message);
-        } finally {
-            this.showLoading(false);
-        }
-    }
-
-    async saveAdminPassword() {
-        // التحقق من كلمة المرور القديمة إذا كانت موجودة
-        if (this.data.settings.password && this.data.settings.password.trim() !== '') {
-            if (!(await this.verifyPassword('أدخل كلمة المرور الحالية للتأكيد'))) {
-                this.addWarningNotification('تم إلغاء تغيير كلمة المرور');
-                return;
-            }
-        }
-
-        const newPassword = document.getElementById('adminPassword')?.value.trim();
-        const confirmPassword = document.getElementById('confirmPassword')?.value.trim();
-
-        if (newPassword !== confirmPassword) {
-            this.addErrorNotification('كلمات المرور غير متطابقة');
-            return;
-        }
-
-        if (newPassword.length > 0 && newPassword.length < 4) {
-            this.addWarningNotification('كلمة المرور يجب أن تكون 4 أحرف على الأقل أو فارغة للإلغاء');
-            return;
-        }
-
-        this.data.settings.password = newPassword;
-        await this.saveData();
-        
-        if (newPassword.length > 0) {
-            this.addSuccessNotification('تم تحديث كلمة المرور الإدارية بنجاح');
-        } else {
-            this.addSuccessNotification('تم إلغاء كلمة المرور الإدارية');
-        }
-        
-        // Clear password fields
-        document.getElementById('adminPassword').value = '';
-        document.getElementById('confirmPassword').value = '';
-        
-        console.log('🔐 تم تحديث كلمة المرور الإدارية');
-    }
-
-    async saveNotificationSettings() {
-        // التحقق من كلمة المرور
-        if (!(await this.verifyPassword('أدخل كلمة المرور لحفظ إعدادات الإشعارات'))) {
-            this.addWarningNotification('تم إلغاء حفظ الإعدادات');
-            return;
-        }
-
-        // Save notification preferences
-        const notifications = {
-            sales: document.getElementById('notifySales')?.checked || false,
-            contracts: document.getElementById('notifyContracts')?.checked || false,
-            customers: document.getElementById('notifyCustomers')?.checked || false,
-            lowStock: document.getElementById('notifyLowStock')?.checked || false,
-            contractExpiry: document.getElementById('notifyContractExpiry')?.checked || false
-        };
-
-        this.data.settings.notifications = notifications;
-        await this.saveData();
-        
-        this.addSuccessNotification('تم حفظ إعدادات الإشعارات بنجاح');
-        console.log('🔔 تم حفظ إعدادات الإشعارات');
-    }
-
-    // =============================================
-    // TABLE SELECTION AND ACTIONS
-    // =============================================
-
-    handleRowSelection() {
-        const checkboxes = document.querySelectorAll('.row-checkbox:checked');
-        const deleteBtn = document.getElementById('deleteSelectedBtn');
-        
-        if (deleteBtn) {
-            deleteBtn.disabled = checkboxes.length === 0;
-            deleteBtn.textContent = checkboxes.length > 0 ? 
-                `حذف المحدد (${checkboxes.length})` : 'حذف المحدد';
-        }
-    }
-
-    toggleSelectAll(tableType) {
-        const selectAllCheckbox = document.getElementById(`selectAll${tableType.charAt(0).toUpperCase() + tableType.slice(1)}Checkbox`);
+    toggleSelectAll(type) {
+        const selectAllCheckbox = document.getElementById(`selectAll${this.capitalize(type)}Checkbox`);
         const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+        const isChecked = selectAllCheckbox.checked;
         
         rowCheckboxes.forEach(checkbox => {
-            checkbox.checked = selectAllCheckbox?.checked || false;
+            checkbox.checked = isChecked;
         });
         
         this.handleRowSelection();
     }
 
-    selectAllSales() {
-        this.toggleSelectAll('sales');
+    handleRowSelection() {
+        const selectedRows = document.querySelectorAll('.row-checkbox:checked');
+        const bulkActions = document.querySelector('.bulk-actions');
+        const selectedCount = document.getElementById('selectedCount');
+        
+        if (bulkActions) {
+            bulkActions.style.display = selectedRows.length > 0 ? 'flex' : 'none';
+        }
+        
+        if (selectedCount) {
+            selectedCount.textContent = selectedRows.length;
+        }
     }
 
     async deleteSelectedSales() {
-        // التحقق من كلمة المرور
-        if (!(await this.verifyPassword('أدخل كلمة المرور للحذف الجماعي'))) {
+        // طلب كلمة المرور قبل الحذف الجماعي
+        if (!(await this.verifyPassword('الحذف الجماعي للمبيعات'))) {
             this.addWarningNotification('تم إلغاء الحذف الجماعي');
             return;
         }
@@ -5233,7 +4843,7 @@ ${message}
                     const sale = this.data.sales[saleIndex];
                     totalAmount += sale.total;
                     
-                    // Restore inventory and customer totals
+                    // Restore inventory and customer data
                     const product = this.data.products.find(p => p.id === sale.productId);
                     if (product) {
                         product.stock += sale.quantity;
@@ -5269,12 +4879,863 @@ ${message}
         }
     }
 
-    clearAllSelections() {
-        const checkboxes = document.querySelectorAll('.row-checkbox, input[type="checkbox"][id^="selectAll"]');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = false;
+    exportSelectedData(type, format = 'csv') {
+        const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+        const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+        
+        if (selectedIds.length === 0) {
+            this.addWarningNotification('يرجى تحديد عناصر للتصدير');
+            return;
+        }
+
+        const data = this.data[type === 'sales' ? 'sales' : type]
+            .filter(item => selectedIds.includes(item.id));
+
+        this.exportData(data, format, `${type}_selected`);
+    }
+
+    // =============================================
+    // DATA EXPORT AND IMPORT
+    // =============================================
+
+    exportData(customData = null, format = 'json', filename = null) {
+        const timestamp = new Date().toISOString().split('T')[0];
+        const defaultFilename = `tagelmalek_backup_${timestamp}`;
+        
+        try {
+            if (format === 'json') {
+                const dataToExport = customData || this.data;
+                const jsonData = JSON.stringify(dataToExport, null, 2);
+                this.downloadFile(jsonData, `${filename || defaultFilename}.json`, 'application/json');
+                
+            } else if (format === 'csv') {
+                const csvData = this.convertToCSV(customData || this.data.sales);
+                this.downloadFile(csvData, `${filename || defaultFilename}.csv`, 'text/csv');
+                
+            } else if (format === 'pdf') {
+                this.exportToPDF(customData);
+            }
+            
+            this.addSuccessNotification(`تم تصدير البيانات بصيغة ${format.toUpperCase()} بنجاح`);
+            
+        } catch (error) {
+            console.error('خطأ في تصدير البيانات:', error);
+            this.addErrorNotification('خطأ في تصدير البيانات');
+        }
+    }
+
+    convertToCSV(data) {
+        if (!Array.isArray(data) || data.length === 0) {
+            return 'لا توجد بيانات للتصدير';
+        }
+
+        const headers = Object.keys(data[0]);
+        const csvHeaders = headers.join(',');
+        
+        const csvRows = data.map(row => 
+            headers.map(header => {
+                const value = row[header] || '';
+                // Handle values that contain commas or quotes
+                return typeof value === 'string' && (value.includes(',') || value.includes('"')) 
+                    ? `"${value.replace(/"/g, '""')}"` 
+                    : value;
+            }).join(',')
+        );
+        
+        return [csvHeaders, ...csvRows].join('\n');
+    }
+
+    downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = window.URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        
+        setTimeout(() => {
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        }, 100);
+    }
+
+    async importData() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            try {
+                const text = await file.text();
+                const importedData = JSON.parse(text);
+                
+                const confirmed = await this.showConfirmDialog(
+                    'هل أنت متأكد من استيراد البيانات؟ سيتم استبدال البيانات الحالية.',
+                    'تأكيد الاستيراد'
+                );
+                
+                if (confirmed) {
+                    this.data = this.mergeObjects(this.data, importedData);
+                    await this.saveData();
+                    this.updateAllSections();
+                    this.addSuccessNotification('تم استيراد البيانات بنجاح');
+                }
+                
+            } catch (error) {
+                console.error('خطأ في استيراد البيانات:', error);
+                this.addErrorNotification('خطأ في استيراد البيانات - تأكد من صحة الملف');
+            }
+        };
+        
+        input.click();
+    }
+
+    // =============================================
+    // BACKUP AND RESTORE
+    // =============================================
+
+    async createBackup() {
+        try {
+            const backup = {
+                ...this.data,
+                backup: {
+                    version: this.version,
+                    timestamp: new Date().toISOString(),
+                    type: 'full_backup',
+                    checksum: this.generateChecksum(this.data)
+                }
+            };
+            
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const filename = `tagelmalek_backup_${timestamp}`;
+            
+            this.exportData(backup, 'json', filename);
+            
+            this.data.metadata.lastBackup = new Date().toISOString();
+            await this.saveData();
+            
+            await this.sendTelegramNotification(`💾 نسخة احتياطية جديدة
+📅 التاريخ: ${this.formatDateTime(new Date())}
+📊 عدد المبيعات: ${this.data.sales.length}
+👥 عدد العملاء: ${this.data.customers.length}
+📦 عدد المنتجات: ${this.data.products.length}`);
+            
+            this.addSuccessNotification('تم إنشاء النسخة الاحتياطية بنجاح');
+            
+        } catch (error) {
+            console.error('خطأ في إنشاء النسخة الاحتياطية:', error);
+            this.addErrorNotification('خطأ في إنشاء النسخة الاحتياطية');
+        }
+    }
+
+    generateChecksum(data) {
+        // Simple checksum generation
+        const str = JSON.stringify(data);
+        let hash = 0;
+        
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        
+        return Math.abs(hash).toString(16);
+    }
+
+    // =============================================
+    // REPORTS AND ANALYTICS
+    // =============================================
+
+    generateSalesReport(period = 'monthly') {
+        const today = new Date();
+        let startDate, endDate, title;
+        
+        switch (period) {
+            case 'daily':
+                startDate = endDate = today.toISOString().split('T')[0];
+                title = `تقرير المبيعات اليومي - ${this.formatDate(startDate)}`;
+                break;
+            case 'weekly':
+                const weekRange = this.getWeekRange(today);
+                startDate = weekRange.start;
+                endDate = weekRange.end;
+                title = `تقرير المبيعات الأسبوعي - ${this.formatDate(startDate)} إلى ${this.formatDate(endDate)}`;
+                break;
+            case 'monthly':
+                startDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
+                endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+                title = `تقرير المبيعات الشهري - ${this.formatDate(startDate, 'monthYear')}`;
+                break;
+            case 'yearly':
+                startDate = `${today.getFullYear()}-01-01`;
+                endDate = `${today.getFullYear()}-12-31`;
+                title = `تقرير المبيعات السنوي - ${today.getFullYear()}`;
+                break;
+        }
+        
+        const filteredSales = this.data.sales.filter(sale => 
+            sale.date >= startDate && sale.date <= endDate && sale.status === 'مكتملة'
+        );
+        
+        const totalRevenue = filteredSales.reduce((sum, sale) => sum + sale.total, 0);
+        const totalQuantity = filteredSales.reduce((sum, sale) => sum + sale.quantity, 0);
+        const averageOrderValue = filteredSales.length > 0 ? totalRevenue / filteredSales.length : 0;
+        
+        // Product analysis
+        const productStats = {};
+        filteredSales.forEach(sale => {
+            if (!productStats[sale.productId]) {
+                productStats[sale.productId] = {
+                    name: sale.productName,
+                    quantity: 0,
+                    revenue: 0,
+                    orders: 0
+                };
+            }
+            productStats[sale.productId].quantity += sale.quantity;
+            productStats[sale.productId].revenue += sale.total;
+            productStats[sale.productId].orders += 1;
         });
-        this.handleRowSelection();
+        
+        const topProducts = Object.values(productStats)
+            .sort((a, b) => b.revenue - a.revenue)
+            .slice(0, 5);
+        
+        // Customer analysis
+        const customerStats = {};
+        filteredSales.forEach(sale => {
+            if (!customerStats[sale.customerId]) {
+                customerStats[sale.customerId] = {
+                    name: sale.customerName,
+                    revenue: 0,
+                    orders: 0
+                };
+            }
+            customerStats[sale.customerId].revenue += sale.total;
+            customerStats[sale.customerId].orders += 1;
+        });
+        
+        const topCustomers = Object.values(customerStats)
+            .sort((a, b) => b.revenue - a.revenue)
+            .slice(0, 5);
+        
+        const reportHtml = `
+            <div class="sales-report">
+                <div class="report-header">
+                    <h3>${title}</h3>
+                    <div class="report-period">
+                        الفترة: ${this.formatDate(startDate)} - ${this.formatDate(endDate)}
+                    </div>
+                </div>
+                
+                <div class="report-summary">
+                    <div class="summary-cards">
+                        <div class="summary-card">
+                            <div class="card-icon revenue">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div class="card-content">
+                                <h4>إجمالي الإيرادات</h4>
+                                <p class="card-value">${this.formatCurrency(totalRevenue)}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-card">
+                            <div class="card-icon orders">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div class="card-content">
+                                <h4>عدد المبيعات</h4>
+                                <p class="card-value">${filteredSales.length}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-card">
+                            <div class="card-icon quantity">
+                                <i class="fas fa-boxes"></i>
+                            </div>
+                            <div class="card-content">
+                                <h4>إجمالي الكمية</h4>
+                                <p class="card-value">${totalQuantity}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-card">
+                            <div class="card-icon average">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="card-content">
+                                <h4>متوسط قيمة الطلب</h4>
+                                <p class="card-value">${this.formatCurrency(averageOrderValue)}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h4>أفضل 5 منتجات</h4>
+                    ${topProducts.length > 0 ? `
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>المنتج</th>
+                                    <th>الكمية المباعة</th>
+                                    <th>الإيرادات</th>
+                                    <th>عدد الطلبات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${topProducts.map((product, index) => `
+                                    <tr>
+                                        <td>
+                                            <span class="rank">#${index + 1}</span>
+                                            ${product.name}
+                                        </td>
+                                        <td>${product.quantity}</td>
+                                        <td>${this.formatCurrency(product.revenue)}</td>
+                                        <td>${product.orders}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    ` : '<p class="no-data">لا توجد بيانات منتجات</p>'}
+                </div>
+                
+                <div class="report-section">
+                    <h4>أفضل 5 عملاء</h4>
+                    ${topCustomers.length > 0 ? `
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>العميل</th>
+                                    <th>إجمالي المشتريات</th>
+                                    <th>عدد الطلبات</th>
+                                    <th>متوسط الطلب</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${topCustomers.map((customer, index) => `
+                                    <tr>
+                                        <td>
+                                            <span class="rank">#${index + 1}</span>
+                                            ${customer.name}
+                                        </td>
+                                        <td>${this.formatCurrency(customer.revenue)}</td>
+                                        <td>${customer.orders}</td>
+                                        <td>${this.formatCurrency(customer.revenue / customer.orders)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    ` : '<p class="no-data">لا توجد بيانات عملاء</p>'}
+                </div>
+                
+                <div class="report-footer">
+                    <div class="report-actions">
+                        <button class="btn btn-primary" onclick="salesSystem.printReport()">
+                            <i class="fas fa-print"></i> طباعة التقرير
+                        </button>
+                        <button class="btn btn-secondary" onclick="salesSystem.exportReport('${period}')">
+                            <i class="fas fa-download"></i> تصدير PDF
+                        </button>
+                        <button class="btn btn-success" onclick="salesSystem.sendReportToTelegram('${period}')">
+                            <i class="fab fa-telegram"></i> إرسال للتليجرام
+                        </button>
+                    </div>
+                    <div class="report-meta">
+                        <p>تم إنشاء التقرير في: ${this.formatDateTime(new Date())}</p>
+                        <p>بواسطة نظام Tag ElMalek v${this.version}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        this.showModal(title, reportHtml, 'modal-xl');
+    }
+
+    async sendReportToTelegram(period) {
+        if (!this.isOnline) {
+            this.addWarningNotification('يتطلب الاتصال بالإنترنت لإرسال التقرير');
+            return;
+        }
+
+        const today = new Date();
+        let startDate, endDate;
+        
+        switch (period) {
+            case 'daily':
+                startDate = endDate = today.toISOString().split('T')[0];
+                break;
+            case 'weekly':
+                const weekRange = this.getWeekRange(today);
+                startDate = weekRange.start;
+                endDate = weekRange.end;
+                break;
+            case 'monthly':
+                startDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
+                endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+                break;
+            case 'yearly':
+                startDate = `${today.getFullYear()}-01-01`;
+                endDate = `${today.getFullYear()}-12-31`;
+                break;
+        }
+        
+        const filteredSales = this.data.sales.filter(sale => 
+            sale.date >= startDate && sale.date <= endDate && sale.status === 'مكتملة'
+        );
+        
+        const totalRevenue = filteredSales.reduce((sum, sale) => sum + sale.total, 0);
+        const totalQuantity = filteredSales.reduce((sum, sale) => sum + sale.quantity, 0);
+
+        const reportText = `📊 تقرير المبيعات ${period === 'daily' ? 'اليومي' : period === 'weekly' ? 'الأسبوعي' : period === 'monthly' ? 'الشهري' : 'السنوي'}
+
+📅 الفترة: ${this.formatDate(startDate)} - ${this.formatDate(endDate)}
+
+📈 ملخص الأداء:
+💰 إجمالي الإيرادات: ${this.formatCurrency(totalRevenue)}
+🛒 عدد المبيعات: ${filteredSales.length}
+📦 إجمالي الكمية: ${totalQuantity}
+📊 متوسط قيمة الطلب: ${filteredSales.length > 0 ? this.formatCurrency(totalRevenue / filteredSales.length) : '0 ج.م'}
+
+🏢 إجمالي العملاء: ${this.data.customers.length}
+📦 إجمالي المنتجات: ${this.data.products.length}
+📋 إجمالي الاتفاقات: ${this.data.contracts.length}
+
+📅 تاريخ التقرير: ${this.formatDateTime(new Date())}`;
+
+        await this.sendTelegramNotification(reportText);
+        this.addSuccessNotification('تم إرسال التقرير للتليجرام بنجاح');
+    }
+
+    // =============================================
+    // SETTINGS AND CONFIGURATION
+    // =============================================
+
+    openSettings() {
+        const settingsHtml = `
+            <div class="settings-container">
+                <div class="settings-tabs">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" onclick="showSettingsTab('general')">
+                            <i class="fas fa-cog"></i> عام
+                        </button>
+                        <button class="tab-btn" onclick="showSettingsTab('telegram')">
+                            <i class="fab fa-telegram"></i> التليجرام
+                        </button>
+                        <button class="tab-btn" onclick="showSettingsTab('security')">
+                            <i class="fas fa-shield-alt"></i> الأمان
+                        </button>
+                        <button class="tab-btn" onclick="showSettingsTab('notifications')">
+                            <i class="fas fa-bell"></i> الإشعارات
+                        </button>
+                        <button class="tab-btn" onclick="showSettingsTab('backup')">
+                            <i class="fas fa-database"></i> النسخ الاحتياطي
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="settings-content">
+                    <!-- General Settings -->
+                    <div id="general-settings" class="settings-tab active">
+                        <h4>معلومات عامة</h4>
+                        <div class="settings-form">
+                            <div class="form-group">
+                                <label>اسم الشركة:</label>
+                                <input type="text" id="companyName" class="form-control" value="${this.data.settings.company}" placeholder="اسم شركتك">
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>العملة:</label>
+                                    <select id="currencySetting" class="form-control">
+                                        <option value="EGP" ${this.data.settings.currency === 'EGP' ? 'selected' : ''}>جنيه مصري (ج.م)</option>
+                                        <option value="USD" ${this.data.settings.currency === 'USD' ? 'selected' : ''}>دولار أمريكي ($)</option>
+                                        <option value="EUR" ${this.data.settings.currency === 'EUR' ? 'selected' : ''}>يورو (€)</option>
+                                        <option value="SAR" ${this.data.settings.currency === 'SAR' ? 'selected' : ''}>ريال سعودي (ر.س)</option>
+                                        <option value="AED" ${this.data.settings.currency === 'AED' ? 'selected' : ''}>درهم إماراتي (د.إ)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>المنطقة الزمنية:</label>
+                                    <select id="timezoneSetting" class="form-control">
+                                        <option value="Africa/Cairo" ${this.data.settings.timeZone === 'Africa/Cairo' ? 'selected' : ''}>القاهرة (GMT+2)</option>
+                                        <option value="Asia/Dubai" ${this.data.settings.timeZone === 'Asia/Dubai' ? 'selected' : ''}>دبي (GMT+4)</option>
+                                        <option value="Asia/Riyadh" ${this.data.settings.timeZone === 'Asia/Riyadh' ? 'selected' : ''}>الرياض (GMT+3)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>الحد الأدنى للمخزون (تحذير):</label>
+                                    <input type="number" id="lowStockThreshold" class="form-control" value="${this.data.settings.lowStockThreshold}" min="1">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>تحذير انتهاء الاتفاقات (أيام):</label>
+                                    <input type="number" id="contractAlertDays" class="form-control" value="${this.data.settings.contractAlertDays}" min="1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Telegram Settings -->
+                    <div id="telegram-settings" class="settings-tab">
+                        <h4>إعدادات التليجرام</h4>
+                        <div class="settings-form">
+                            <div class="info-box">
+                                <i class="fas fa-info-circle"></i>
+                                <div>
+                                    <h5>كيفية الحصول على إعدادات التليجرام:</h5>
+                                    <ol>
+                                        <li>ابحث عن @BotFather في التليجرام</li>
+                                        <li>أرسل /newbot لإنشاء بوت جديد</li>
+                                        <li>احصل على Bot Token وأدخله أدناه</li>
+                                        <li>أضف البوت لمجموعة أو احصل على Chat ID</li>
+                                    </ol>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>رمز البوت (Bot Token):</label>
+                                <input type="password" id="telegramBotToken" class="form-control" value="${this.data.settings.botToken}" placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz">
+                                <button type="button" class="toggle-password" onclick="togglePasswordVisibility('telegramBotToken')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>معرف المحادثة (Chat ID):</label>
+                                <input type="text" id="telegramChatId" class="form-control" value="${this.data.settings.chatId}" placeholder="-1001234567890">
+                            </div>
+                            
+                            <div class="form-group">
+                                <button type="button" class="btn btn-primary" onclick="salesSystem.testTelegram()">
+                                    <i class="fas fa-paper-plane"></i> اختبار الاتصال
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Security Settings -->
+                    <div id="security-settings" class="settings-tab">
+                        <h4>إعدادات الأمان</h4>
+                        <div class="settings-form">
+                            <div class="form-group">
+                                <label>كلمة المرور الإدارية:</label>
+                                <div class="password-input-group">
+                                    <input type="password" id="adminPassword" class="form-control" value="${this.data.settings.password}" placeholder="أدخل كلمة مرور قوية">
+                                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility('adminPassword')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <small class="form-text text-muted">
+                                    تستخدم لحماية العمليات الحساسة مثل الحذف والتعديل
+                                </small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>تأكيد كلمة المرور:</label>
+                                <input type="password" id="confirmAdminPassword" class="form-control" placeholder="أعد إدخال كلمة المرور">
+                            </div>
+                            
+                            <div class="security-info">
+                                <h5>معلومات الأمان:</h5>
+                                <ul>
+                                    <li>كلمة المرور محفوظة محلياً في متصفحك</li>
+                                    <li>لا يتم إرسال كلمة المرور عبر الإنترنت</li>
+                                    <li>يمكنك تغيير كلمة المرور في أي وقت</li>
+                                    <li>ترك الحقل فارغاً يعطل الحماية</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Notifications Settings -->
+                    <div id="notifications-settings" class="settings-tab">
+                        <h4>إعدادات الإشعارات</h4>
+                        <div class="settings-form">
+                            <div class="form-group">
+                                <h5>إشعارات التليجرام:</h5>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="salesNotifications" ${this.data.settings.notifications.sales ? 'checked' : ''}>
+                                        <span class="checkmark"></span>
+                                        إشعارات المبيعات
+                                    </label>
+                                    
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="contractsNotifications" ${this.data.settings.notifications.contracts ? 'checked' : ''}>
+                                        <span class="checkmark"></span>
+                                        إشعارات الاتفاقات
+                                    </label>
+                                    
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="customersNotifications" ${this.data.settings.notifications.customers ? 'checked' : ''}>
+                                        <span class="checkmark"></span>
+                                        إشعارات العملاء الجدد
+                                    </label>
+                                    
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="lowStockNotifications" ${this.data.settings.notifications.lowStock ? 'checked' : ''}>
+                                        <span class="checkmark"></span>
+                                        تحذيرات المخزون المنخفض
+                                    </label>
+                                    
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="contractExpiryNotifications" ${this.data.settings.notifications.contractExpiry ? 'checked' : ''}>
+                                        <span class="checkmark"></span>
+                                        تحذيرات انتهاء الاتفاقات
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Backup Settings -->
+                    <div id="backup-settings" class="settings-tab">
+                        <h4>إعدادات النسخ الاحتياطي</h4>
+                        <div class="settings-form">
+                            <div class="backup-status">
+                                <h5>حالة آخر نسخة احتياطية:</h5>
+                                <p><strong>التاريخ:</strong> ${this.data.metadata.lastBackup ? this.formatDateTime(this.data.metadata.lastBackup) : 'لم يتم إنشاء نسخة بعد'}</p>
+                                <p><strong>حجم البيانات:</strong> ${this.calculateDataSize()} KB تقريباً</p>
+                            </div>
+                            
+                            <div class="backup-actions">
+                                <button type="button" class="btn btn-primary" onclick="salesSystem.createBackup()">
+                                    <i class="fas fa-download"></i> إنشاء نسخة احتياطية
+                                </button>
+                                
+                                <button type="button" class="btn btn-secondary" onclick="salesSystem.importData()">
+                                    <i class="fas fa-upload"></i> استيراد نسخة احتياطية
+                                </button>
+                                
+                                <button type="button" class="btn btn-success" onclick="salesSystem.exportData('json')">
+                                    <i class="fas fa-file-export"></i> تصدير البيانات
+                                </button>
+                            </div>
+                            
+                            <div class="backup-info">
+                                <h5>معلومات مهمة:</h5>
+                                <ul>
+                                    <li>يتم حفظ البيانات تلقائياً كل 3 دقائق</li>
+                                    <li>النسخ الاحتياطية تشمل جميع البيانات والإعدادات</li>
+                                    <li>يمكنك استيراد النسخ الاحتياطية في أي وقت</li>
+                                    <li>احرص على إنشاء نسخ احتياطية دورية</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <script>
+                function showSettingsTab(tabName) {
+                    // Hide all tabs
+                    document.querySelectorAll('.settings-tab').forEach(tab => tab.classList.remove('active'));
+                    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                    
+                    // Show selected tab
+                    document.getElementById(tabName + '-settings').classList.add('active');
+                    event.target.classList.add('active');
+                }
+                
+                function togglePasswordVisibility(inputId) {
+                    const input = document.getElementById(inputId);
+                    const button = input.nextElementSibling;
+                    const icon = button.querySelector('i');
+                    
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.className = 'fas fa-eye-slash';
+                    } else {
+                        input.type = 'password';
+                        icon.className = 'fas fa-eye';
+                    }
+                }
+            </script>
+        `;
+
+        this.showModal('إعدادات النظام', settingsHtml, 'modal-xl', [
+            {
+                text: 'إلغاء',
+                class: 'btn-secondary',
+                onClick: () => this.closeDynamicModal('dynamicModal_' + Date.now())
+            },
+            {
+                text: 'حفظ الإعدادات',
+                class: 'btn-primary',
+                onClick: () => this.saveSettings()
+            }
+        ]);
+    }
+
+    async saveSettings() {
+        try {
+            // General settings
+            this.data.settings.company = document.getElementById('companyName').value || 'Tag ElMalek';
+            this.data.settings.currency = document.getElementById('currencySetting').value;
+            this.data.settings.timeZone = document.getElementById('timezoneSetting').value;
+            this.data.settings.lowStockThreshold = parseInt(document.getElementById('lowStockThreshold').value) || 10;
+            this.data.settings.contractAlertDays = parseInt(document.getElementById('contractAlertDays').value) || 30;
+
+            // Telegram settings
+            this.data.settings.botToken = document.getElementById('telegramBotToken').value;
+            this.data.settings.chatId = document.getElementById('telegramChatId').value;
+
+            // Security settings
+            const newPassword = document.getElementById('adminPassword').value;
+            const confirmPassword = document.getElementById('confirmAdminPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                this.addErrorNotification('كلمة المرور وتأكيدها غير متطابقين');
+                return;
+            }
+            
+            this.data.settings.password = newPassword;
+
+            // Notifications settings
+            this.data.settings.notifications.sales = document.getElementById('salesNotifications').checked;
+            this.data.settings.notifications.contracts = document.getElementById('contractsNotifications').checked;
+            this.data.settings.notifications.customers = document.getElementById('customersNotifications').checked;
+            this.data.settings.notifications.lowStock = document.getElementById('lowStockNotifications').checked;
+            this.data.settings.notifications.contractExpiry = document.getElementById('contractExpiryNotifications').checked;
+
+            await this.saveData();
+            this.closeAllModals();
+            this.addSuccessNotification('تم حفظ الإعدادات بنجاح');
+
+        } catch (error) {
+            console.error('خطأ في حفظ الإعدادات:', error);
+            this.addErrorNotification('خطأ في حفظ الإعدادات');
+        }
+    }
+
+    async testTelegram() {
+        const botToken = document.getElementById('telegramBotToken').value;
+        const chatId = document.getElementById('telegramChatId').value;
+
+        if (!botToken || !chatId) {
+            this.addWarningNotification('يرجى إدخال رمز البوت ومعرف المحادثة أولاً');
+            return;
+        }
+
+        try {
+            const testMessage = `🧪 رسالة اختبار من نظام Tag ElMalek
+
+✅ تم تكوين التليجرام بنجاح!
+📅 التاريخ: ${this.formatDateTime(new Date())}
+🔧 إصدار النظام: v${this.version}
+
+يمكنك الآن استقبال إشعارات النظام على التليجرام.`;
+
+            const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: testMessage
+                })
+            });
+
+            if (response.ok) {
+                this.addSuccessNotification('✅ تم إرسال رسالة الاختبار بنجاح!');
+            } else {
+                const errorData = await response.json();
+                this.addErrorNotification(`❌ فشل الاختبار: ${errorData.description || 'خطأ غير معروف'}`);
+            }
+
+        } catch (error) {
+            console.error('خطأ في اختبار التليجرام:', error);
+            this.addErrorNotification('❌ خطأ في الاتصال - تأكد من الإعدادات');
+        }
+    }
+
+    calculateDataSize() {
+        const dataString = JSON.stringify(this.data);
+        return Math.round(dataString.length / 1024);
+    }
+
+    // =============================================
+    // SYSTEM UPDATE METHODS
+    // =============================================
+
+    updateSectionData(sectionId) {
+        switch (sectionId) {
+            case 'dashboard':
+                this.updateDashboard();
+                break;
+            case 'sales':
+                this.updateSalesTable();
+                break;
+            case 'contracts':
+                this.updateContractsTable();
+                break;
+            case 'customers':
+                this.updateCustomersTable();
+                break;
+            case 'products':
+                this.updateProductsTable();
+                break;
+            case 'reports':
+                this.generateSalesReport();
+                break;
+        }
+    }
+
+    populateAllSelects() {
+        // Update customer selects
+        const customerSelects = document.querySelectorAll('select[id$="Customer"]');
+        customerSelects.forEach(select => {
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">اختر العميل...</option>';
+            
+            this.data.customers
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .forEach(customer => {
+                    const option = document.createElement('option');
+                    option.value = customer.id;
+                    option.textContent = `${customer.name} - ${customer.phone}`;
+                    if (customer.company) option.textContent += ` (${customer.company})`;
+                    select.appendChild(option);
+                });
+                
+            if (currentValue) select.value = currentValue;
+        });
+
+        // Update product selects
+        const productSelects = document.querySelectorAll('select[id$="Product"]');
+        productSelects.forEach(select => {
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">اختر المنتج...</option>';
+            
+            this.data.products
+                .filter(product => product.stock > 0) // Only show available products
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .forEach(product => {
+                    const option = document.createElement('option');
+                    option.value = product.id;
+                    option.textContent = `${product.name} - ${this.formatCurrency(product.price)} - متاح: ${product.stock}`;
+                    option.setAttribute('data-price', product.price);
+                    option.setAttribute('data-stock', product.stock);
+                    select.appendChild(option);
+                });
+                
+            if (currentValue) select.value = currentValue;
+        });
+
+        console.log('🔄 تم تحديث جميع القوائم المنسدلة');
     }
 
     // =============================================
@@ -5283,35 +5744,50 @@ ${message}
 
     showQuickActions() {
         const quickActionsHtml = `
-            <div class="quick-actions-menu">
-                <h4>الإجراءات السريعة</h4>
+            <div class="quick-actions-panel">
+                <h4>إجراءات سريعة</h4>
                 <div class="quick-actions-grid">
-                    <button class="quick-action-item" onclick="salesSystem.openModal('saleModal'); salesSystem.closeDynamicModal('${arguments[0] || 'quickActions'}')">
-                        <i class="fas fa-shopping-cart"></i>
+                    <button class="quick-action-btn" onclick="salesSystem.openModal('saleModal')">
+                        <i class="fas fa-plus-circle"></i>
                         <span>مبيعة جديدة</span>
                         <small>Ctrl+N</small>
                     </button>
-                    <button class="quick-action-item" onclick="salesSystem.openModal('contractModal'); salesSystem.closeDynamicModal('${arguments[0] || 'quickActions'}')">
-                        <i class="fas fa-handshake"></i>
-                        <span>اتفاق جديد</span>
-                    </button>
-                    <button class="quick-action-item" onclick="salesSystem.openModal('customerModal'); salesSystem.closeDynamicModal('${arguments[0] || 'quickActions'}')">
+                    
+                    <button class="quick-action-btn" onclick="salesSystem.openModal('customerModal')">
                         <i class="fas fa-user-plus"></i>
                         <span>عميل جديد</span>
                     </button>
-                    <button class="quick-action-item" onclick="salesSystem.openModal('productModal'); salesSystem.closeDynamicModal('${arguments[0] || 'quickActions'}')">
+                    
+                    <button class="quick-action-btn" onclick="salesSystem.openModal('productModal')">
                         <i class="fas fa-box"></i>
                         <span>منتج جديد</span>
                     </button>
-                    <button class="quick-action-item" onclick="salesSystem.exportData(); salesSystem.closeDynamicModal('${arguments[0] || 'quickActions'}')">
-                        <i class="fas fa-download"></i>
-                        <span>تصدير البيانات</span>
-                        <small>Ctrl+E</small>
+                    
+                    <button class="quick-action-btn" onclick="salesSystem.openModal('contractModal')">
+                        <i class="fas fa-handshake"></i>
+                        <span>اتفاق جديد</span>
                     </button>
-                    <button class="quick-action-item" onclick="salesSystem.createBackup(); salesSystem.closeDynamicModal('${arguments[0] || 'quickActions'}')">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>نسخ احتياطي</span>
+                    
+                    <button class="quick-action-btn" onclick="salesSystem.generateSalesReport('daily')">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>تقرير اليوم</span>
+                    </button>
+                    
+                    <button class="quick-action-btn" onclick="salesSystem.createBackup()">
+                        <i class="fas fa-download"></i>
+                        <span>نسخة احتياطية</span>
                         <small>Ctrl+B</small>
+                    </button>
+                    
+                    <button class="quick-action-btn" onclick="salesSystem.showNotifications()">
+                        <i class="fas fa-bell"></i>
+                        <span>الإشعارات</span>
+                        ${this.notificationCount > 0 ? `<span class="badge">${this.notificationCount}</span>` : ''}
+                    </button>
+                    
+                    <button class="quick-action-btn" onclick="salesSystem.openSettings()">
+                        <i class="fas fa-cog"></i>
+                        <span>الإعدادات</span>
                     </button>
                 </div>
             </div>
@@ -5321,8 +5797,7 @@ ${message}
     }
 
     focusSearch() {
-        // Focus on the search box of the currently active section
-        const activeSection = document.querySelector('.section.active')?.id;
+        const activeSection = document.querySelector('.nav-item.active')?.getAttribute('data-section');
         if (activeSection) {
             const searchInput = document.getElementById(`${activeSection}Search`);
             if (searchInput) {
@@ -5332,721 +5807,244 @@ ${message}
         }
     }
 
-    createBackup() {
-        this.exportData();
+    clearAllSelections() {
+        const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+        checkboxes.forEach(checkbox => checkbox.checked = false);
+        this.handleRowSelection();
     }
-}
 
-// =============================================
-// GLOBAL FUNCTIONS AND INITIALIZATION
-// =============================================
+    // =============================================
+    // SYSTEM INFORMATION AND VERSION
+    // =============================================
 
-// Global system instance
-let salesSystem;
-
-// Initialize system when DOM is loaded
-document.addEventListener('DOMContentLoaded', async function() {
-    console.log('🚀 بدء تحميل نظام Tag ElMalek المطور...');
-    
-    try {
-        // Initialize the advanced sales management system
-        salesSystem = new AdvancedSalesManagementSystem();
-        
-        // Make globally available for HTML onclick handlers
-        window.salesSystem = salesSystem;
-        
-        // Setup global error handling
-        window.addEventListener('error', (event) => {
-            console.error('خطأ في النظام:', event.error);
-            if (salesSystem) {
-                salesSystem.addErrorNotification('حدث خطأ في النظام، يرجى إعادة تحميل الصفحة');
-            }
-        });
-        
-        // Setup unhandled promise rejection handling
-        window.addEventListener('unhandledrejection', (event) => {
-            console.error('خطأ غير معالج:', event.reason);
-            event.preventDefault();
-        });
-        
-        console.log('✅ تم تحميل نظام Tag ElMalek بنجاح!');
-        
-    } catch (error) {
-        console.error('❌ فشل في تحميل النظام:', error);
-        
-        // Show error message in loading overlay
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        if (loadingOverlay) {
-            loadingOverlay.innerHTML = `
-                <div class="error-message" style="text-align: center; color: #dc3545;">
-                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                    <h3>خطأ في تحميل النظام</h3>
-                    <p>${error.message}</p>
-                    <button onclick="location.reload()" class="btn btn-primary" style="margin-top: 1rem;">
-                        <i class="fas fa-sync-alt"></i>
-                        إعادة تحميل
+    showSystemInfo() {
+        const systemInfoHtml = `
+            <div class="system-info">
+                <div class="system-logo">
+                    <h2>🏷️ Tag ElMalek</h2>
+                    <p>Advanced Sales Management System</p>
+                </div>
+                
+                <div class="system-details">
+                    <table class="info-table">
+                        <tr>
+                            <td><strong>الإصدار:</strong></td>
+                            <td>v${this.version}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>تاريخ الإنشاء:</strong></td>
+                            <td>${this.formatDateTime(this.data.metadata.createdAt)}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>آخر تحديث:</strong></td>
+                            <td>${this.formatDateTime(this.data.metadata.lastSaved || new Date())}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>عدد المبيعات:</strong></td>
+                            <td>${this.data.sales.length}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>عدد العملاء:</strong></td>
+                            <td>${this.data.customers.length}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>عدد المنتجات:</strong></td>
+                            <td>${this.data.products.length}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>عدد الاتفاقات:</strong></td>
+                            <td>${this.data.contracts.length}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>حالة الاتصال:</strong></td>
+                            <td>${this.isOnline ? '🟢 متصل' : '🔴 غير متصل'}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>حجم البيانات:</strong></td>
+                            <td>${this.calculateDataSize()} KB</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="system-actions">
+                    <button class="btn btn-primary" onclick="salesSystem.performHealthCheck()">
+                        <i class="fas fa-heartbeat"></i> فحص النظام
+                    </button>
+                    <button class="btn btn-secondary" onclick="salesSystem.checkNotifications()">
+                        <i class="fas fa-sync"></i> تحديث الإشعارات
                     </button>
                 </div>
-            `;
-        }
-    }
-});
+                
+                <div class="system-footer">
+                    <p>© 2025 Tag ElMalek. جميع الحقوق محفوظة.</p>
+                    <p>تم تطويره بـ ❤️ باستخدام JavaScript الحديث</p>
+                </div>
+            </div>
+        `;
 
-// Modal functions for global access
-function openModal(modalId) {
-    if (window.salesSystem) {
-        window.salesSystem.openModal(modalId);
+        this.showModal('معلومات النظام', systemInfoHtml, 'modal-md');
+    }
+
+    // =============================================
+    // SYSTEM CLEANUP AND RESET
+    // =============================================
+
+    clearAllData() {
+        this.showConfirmDialog(
+            'هل أنت متأكد من حذف جميع البيانات؟ لا يمكن التراجع عن هذا الإجراء.',
+            'تأكيد المسح الكامل'
+        ).then(confirmed => {
+            if (confirmed) {
+                this.data = {
+                    sales: [],
+                    contracts: [],
+                    customers: [],
+                    products: [],
+                    settings: { ...this.data.settings }, // Keep settings
+                    metadata: {
+                        ...this.data.metadata,
+                        lastClear: new Date().toISOString()
+                    }
+                };
+                
+                this.saveData();
+                this.updateAllSections();
+                this.addSuccessNotification('تم مسح جميع البيانات');
+            }
+        });
+    }
+
+    resetToDefaults() {
+        this.showConfirmDialog(
+            'هل تريد إعادة تعيين النظام إلى الإعدادات الافتراضية؟',
+            'إعادة تعيين النظام'
+        ).then(confirmed => {
+            if (confirmed) {
+                // Keep critical data but reset settings
+                this.data.settings = {
+                    botToken: '',
+                    chatId: '',
+                    company: 'Tag ElMalek',
+                    currency: 'EGP',
+                    timeZone: 'Africa/Cairo',
+                    theme: 'light',
+                    dateFormat: 'dd/mm/yyyy',
+                    lowStockThreshold: 10,
+                    contractAlertDays: 30,
+                    password: '',
+                    notifications: {
+                        sales: true,
+                        contracts: true,
+                        customers: true,
+                        lowStock: true,
+                        contractExpiry: true
+                    },
+                    autoBackup: {
+                        enabled: false,
+                        frequency: 'daily'
+                    }
+                };
+                
+                this.saveData();
+                this.addSuccessNotification('تم إعادة تعيين الإعدادات إلى القيم الافتراضية');
+            }
+        });
     }
 }
 
-function closeModal(modalId) {
-    if (window.salesSystem) {
-        window.salesSystem.closeModal(modalId);
-    }
-}
+// =============================================
+// INITIALIZATION
+// =============================================
 
-// Settings functions
-function saveTelegramSettings() {
-    if (window.salesSystem) {
-        window.salesSystem.saveTelegramSettings();
-    }
-}
-
-function testTelegramConnection() {
-    if (window.salesSystem) {
-        window.salesSystem.testTelegramConnection();
-    }
-}
-
-function saveAdminPassword() {
-    if (window.salesSystem) {
-        window.salesSystem.saveAdminPassword();
-    }
-}
-
-function saveNotificationSettings() {
-    if (window.salesSystem) {
-        window.salesSystem.saveNotificationSettings();
-    }
-}
-
-// Export functions
-function exportData() {
-    if (window.salesSystem) {
-        window.salesSystem.exportData();
-    }
-}
-
-function importData() {
-    if (window.salesSystem) {
-        window.salesSystem.importData();
-    }
-}
-
-// UI Helper functions
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.querySelector('.main-content');
+// Initialize the system when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 بدء تحميل نظام Tag ElMalek...');
     
-    if (sidebar) {
-        sidebar.classList.toggle('collapsed');
-    }
+    // Create global instance
+    window.salesSystem = new AdvancedSalesManagementSystem();
     
-    if (mainContent) {
-        mainContent.style.marginRight = sidebar?.classList.contains('collapsed') ? '0' : '280px';
-    }
-}
-
-function refreshDashboard() {
-    if (window.salesSystem) {
-        window.salesSystem.updateDashboard();
-        window.salesSystem.addSuccessNotification('تم تحديث لوحة التحكم');
-    }
-}
-
-function showQuickActions() {
-    if (window.salesSystem) {
-        window.salesSystem.showQuickActions();
-    }
-}
-
-function showNotifications() {
-    if (window.salesSystem) {
-        window.salesSystem.showNotifications();
-    }
-}
-
-// Close modals and dropdowns when clicking outside
-document.addEventListener('click', function(event) {
-    // Close modals when clicking backdrop
-    if (event.target.classList.contains('modal')) {
+    // Add global error handler
+    window.addEventListener('error', function(e) {
+        console.error('❌ خطأ في النظام:', e.error);
         if (window.salesSystem) {
-            window.salesSystem.closeAllModals();
+            window.salesSystem.addErrorNotification('حدث خطأ في النظام');
         }
-    }
-});
-
-// Handle window resize for responsive design
-window.addEventListener('resize', function() {
-    // Auto-hide sidebar on small screens
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.querySelector('.main-content');
+    });
     
-    if (window.innerWidth <= 768) {
-        if (sidebar && !sidebar.classList.contains('collapsed')) {
-            sidebar.classList.add('collapsed');
-            if (mainContent) {
-                mainContent.style.marginRight = '0';
-            }
+    // Add unhandled promise rejection handler
+    window.addEventListener('unhandledrejection', function(e) {
+        console.error('❌ خطأ في Promise:', e.reason);
+        if (window.salesSystem) {
+            window.salesSystem.addErrorNotification('حدث خطأ في معالجة البيانات');
         }
-    }
+    });
+    
+    console.log('✅ تم تحميل نظام Tag ElMalek بنجاح!');
 });
 
-// Prevent accidental page refresh
-window.addEventListener('beforeunload', function(event) {
+// =============================================
+// GLOBAL UTILITY FUNCTIONS
+// =============================================
+
+// Format currency for global use
+function formatCurrency(amount, currency = 'EGP') {
     if (window.salesSystem) {
-        // Save data before leaving
-        window.salesSystem.saveData();
+        return window.salesSystem.formatCurrency(amount, currency);
     }
-});
+    return `${amount} ج.م`;
+}
 
-// Service Worker registration (for future PWA support)
+// Format date for global use
+function formatDate(date, format = 'full') {
+    if (window.salesSystem) {
+        return window.salesSystem.formatDate(date, format);
+    }
+    return new Date(date).toLocaleDateString('ar-EG');
+}
+
+// Add notification for global use
+function addNotification(message, type = 'info') {
+    if (window.salesSystem) {
+        const methods = {
+            success: 'addSuccessNotification',
+            error: 'addErrorNotification',
+            warning: 'addWarningNotification',
+            info: 'addInfoNotification'
+        };
+        
+        const method = methods[type] || 'addInfoNotification';
+        window.salesSystem[method](message);
+    }
+}
+
+// =============================================
+// SERVICE WORKER FOR OFFLINE SUPPORT
+// =============================================
+
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        // Service worker registration would go here
-        console.log('🔧 Service Worker متاح للتثبيت المستقبلي');
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+                console.log('✅ Service Worker مسجل بنجاح:', registration.scope);
+            })
+            .catch(function(error) {
+                console.log('❌ فشل في تسجيل Service Worker:', error);
+            });
     });
 }
 
-// Add keyboard shortcuts
-document.addEventListener('keydown', function(e) {
-    // Alt + key combinations for quick navigation
-    if (e.altKey) {
-        switch(e.key) {
-            case '1':
-                e.preventDefault();
-                document.querySelector('[data-section="dashboard"]')?.click();
-                break;
-            case '2':
-                e.preventDefault();
-                document.querySelector('[data-section="sales"]')?.click();
-                break;
-            case '3':
-                e.preventDefault();
-                document.querySelector('[data-section="contracts"]')?.click();
-                break;
-            case '4':
-                e.preventDefault();
-                document.querySelector('[data-section="customers"]')?.click();
-                break;
-            case '5':
-                e.preventDefault();
-                document.querySelector('[data-section="products"]')?.click();
-                break;
-            case '6':
-                e.preventDefault();
-                document.querySelector('[data-section="reports"]')?.click();
-                break;
-            case '7':
-                e.preventDefault();
-                document.querySelector('[data-section="settings"]')?.click();
-                break;
-        }
-    }
-    
-    // F keys for quick actions
-    switch(e.key) {
-        case 'F1':
-            e.preventDefault();
-            if (window.salesSystem) {
-                window.salesSystem.showQuickActions();
-            }
-            break;
-        case 'F2':
-            e.preventDefault();
-            if (window.salesSystem) {
-                window.salesSystem.openModal('saleModal');
-            }
-            break;
-        case 'F3':
-            e.preventDefault();
-            if (window.salesSystem) {
-                window.salesSystem.openModal('customerModal');
-            }
-            break;
-        case 'F4':
-            e.preventDefault();
-            if (window.salesSystem) {
-                window.salesSystem.openModal('productModal');
-            }
-            break;
-    }
-});
+// =============================================
+// EXPORT FOR MODULE USAGE
+// =============================================
 
-// Add print styles
-const printStyles = document.createElement('style');
-printStyles.textContent = `
-    @media print {
-        .sidebar, .nav-item, .btn, .modal-header .close, .no-print {
-            display: none !important;
-        }
-        .main-content {
-            margin: 0 !important;
-        }
-        .table {
-            font-size: 12px;
-        }
-        body {
-            font-size: 12px;
-        }
-    }
-`;
-document.head.appendChild(printStyles);
-
-// Add custom CSS animations and shake effect
-const animations = document.createElement('style');
-animations.textContent = `
-    @keyframes fadeInModal {
-        from { opacity: 0; transform: scale(0.9); }
-        to { opacity: 1; transform: scale(1); }
-    }
-    
-    @keyframes fadeOutModal {
-        from { opacity: 1; transform: scale(1); }
-        to { opacity: 0; transform: scale(0.9); }
-    }
-    
-    @keyframes slideInRight {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-    }
-    
-    @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-        20%, 40%, 60%, 80% { transform: translateX(5px); }
-    }
-    
-    .activity-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
-    }
-    
-    .quick-action-item:hover {
-        transform: scale(1.05);
-        transition: all 0.3s ease;
-    }
-    
-    .btn:hover {
-        transform: translateY(-1px);
-        transition: all 0.2s ease;
-    }
-    
-    .table-row:hover {
-        background-color: #f8f9fa;
-        transition: all 0.2s ease;
-    }
-    
-    .low-stock-row {
-        background-color: #fff3cd !important;
-    }
-    
-    .out-of-stock-row {
-        background-color: #f8d7da !important;
-    }
-    
-    .contract-expiring {
-        background-color: #fff3cd !important;
-    }
-    
-    .contract-expired {
-        background-color: #f8d7da !important;
-    }
-    
-    .notification-badge {
-        animation: pulse 2s infinite;
-    }
-    
-    .loading-spinner {
-        animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-    
-    /* Notification System Styles */
-    .notifications-panel {
-        max-height: 80vh;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .notifications-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-bottom: 15px;
-        border-bottom: 1px solid #e2e8f0;
-        margin-bottom: 15px;
-    }
-
-    .notification-controls {
-        display: flex;
-        gap: 8px;
-    }
-
-    .notifications-filter {
-        display: flex;
-        gap: 5px;
-        margin-bottom: 15px;
-        flex-wrap: wrap;
-    }
-
-    .filter-btn {
-        padding: 5px 12px;
-        border: 1px solid #e2e8f0;
-        background: white;
-        border-radius: 15px;
-        font-size: 12px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .filter-btn:hover {
-        background: #f8f9fa;
-    }
-
-    .filter-btn.active {
-        background: #667eea;
-        color: white;
-        border-color: #667eea;
-    }
-
-    .notifications-list {
-        flex: 1;
-        overflow-y: auto;
-        max-height: 400px;
-        padding-right: 5px;
-    }
-
-    .notification-item {
-        display: flex;
-        padding: 12px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        border: 1px solid #e2e8f0;
-        transition: all 0.2s;
-        position: relative;
-    }
-
-    .notification-item:hover {
-        background: #f8f9fa;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .notification-item.unread {
-        background: #f0f4ff;
-        border-left: 4px solid #667eea;
-    }
-
-    .notification-item.notification-success {
-        border-left-color: #10b981;
-    }
-
-    .notification-item.notification-error {
-        border-left-color: #ef4444;
-    }
-
-    .notification-item.notification-warning {
-        border-left-color: #f59e0b;
-    }
-
-    .notification-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-left: 12px;
-        flex-shrink: 0;
-    }
-
-    .notification-success .notification-icon {
-        background: #dcfce7;
-        color: #10b981;
-    }
-
-    .notification-error .notification-icon {
-        background: #fee2e2;
-        color: #ef4444;
-    }
-
-    .notification-warning .notification-icon {
-        background: #fef3c7;
-        color: #f59e0b;
-    }
-
-    .notification-info .notification-icon,
-    .notification-activity .notification-icon {
-        background: #dbeafe;
-        color: #3b82f6;
-    }
-
-    .notification-content {
-        flex: 1;
-    }
-
-    .notification-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 5px;
-    }
-
-    .notification-header h5 {
-        margin: 0;
-        font-size: 14px;
-        font-weight: 600;
-    }
-
-    .notification-time {
-        font-size: 11px;
-        color: #6b7280;
-    }
-
-    .unread-badge {
-        width: 8px;
-        height: 8px;
-        background: #ef4444;
-        border-radius: 50%;
-        margin-right: 8px;
-    }
-
-    .notification-message {
-        margin: 0 0 8px 0;
-        font-size: 13px;
-        color: #374151;
-        line-height: 1.4;
-    }
-
-    .notification-actions {
-        display: flex;
-        gap: 5px;
-        flex-wrap: wrap;
-    }
-
-    .notification-controls {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        margin-right: 8px;
-    }
-
-    .btn-xs {
-        padding: 2px 6px;
-        font-size: 11px;
-        border-radius: 3px;
-    }
-
-    .btn-ghost {
-        background: transparent;
-        border: none;
-        color: #6b7280;
-    }
-
-    .btn-ghost:hover {
-        background: #f3f4f6;
-        color: #374151;
-    }
-
-    .empty-notifications {
-        text-align: center;
-        padding: 40px 20px;
-        color: #6b7280;
-    }
-
-    .empty-notifications i {
-        font-size: 3rem;
-        margin-bottom: 15px;
-        opacity: 0.5;
-    }
-
-    .notifications-footer {
-        border-top: 1px solid #e2e8f0;
-        padding-top: 15px;
-        margin-top: 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-`;
-document.head.appendChild(animations);
-
-// Enhanced error handling for production
-window.onerror = function(msg, url, lineNo, columnNo, error) {
-    console.error('Global Error Handler:', {
-        message: msg,
-        source: url,
-        line: lineNo,
-        column: columnNo,
-        error: error
-    });
-    
-    if (window.salesSystem) {
-        window.salesSystem.addErrorNotification(
-            'حدث خطأ في النظام. تم حفظ التفاصيل في سجل الأخطاء.'
-        );
-    }
-    
-    return true;
-};
-
-// Add performance monitoring
-const perfObserver = new PerformanceObserver((list) => {
-    list.getEntries().forEach((entry) => {
-        if (entry.duration > 100) {
-            console.warn(`عملية بطيئة تم اكتشافها: ${entry.name} - ${entry.duration.toFixed(2)}ms`);
-        }
-    });
-});
-
-if ('PerformanceObserver' in window) {
-    perfObserver.observe({ entryTypes: ['measure', 'navigation'] });
-}
-
-// Add memory usage monitoring
-setInterval(() => {
-    if ('memory' in performance) {
-        const memory = performance.memory;
-        const usedMB = Math.round(memory.usedJSHeapSize / 1048576);
-        const totalMB = Math.round(memory.totalJSHeapSize / 1048576);
-        const limitMB = Math.round(memory.jsHeapSizeLimit / 1048576);
-        
-        if (usedMB / limitMB > 0.8) {
-            console.warn(`تحذير ذاكرة: ${usedMB}MB / ${limitMB}MB (${Math.round(usedMB/limitMB*100)}%)`);
-        }
-    }
-}, 60000); // Check every minute
-
-// Add network speed detection
-function detectConnectionSpeed() {
-    if ('connection' in navigator) {
-        const connection = navigator.connection;
-        if (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g') {
-            console.warn('اتصال بطيء تم اكتشافه');
-            if (window.salesSystem) {
-                window.salesSystem.addWarningNotification('تم اكتشاف اتصال بطيء. قد تكون الاستجابة أبطأ من المعتاد.');
-            }
-        }
-    }
-}
-
-// Check connection speed on load and when it changes
-window.addEventListener('load', detectConnectionSpeed);
-if ('connection' in navigator) {
-    navigator.connection.addEventListener('change', detectConnectionSpeed);
-}
-
-// Add automatic data cleanup
-setInterval(() => {
-    if (window.salesSystem && window.salesSystem.data) {
-        const sixMonthsAgo = new Date();
-        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-        const sixMonthsAgoStr = sixMonthsAgo.toISOString().split('T')[0];
-        
-        // Clean old stock adjustments (older than 6 months)
-        if (window.salesSystem.data.stockAdjustments) {
-            const oldCount = window.salesSystem.data.stockAdjustments.length;
-            window.salesSystem.data.stockAdjustments = window.salesSystem.data.stockAdjustments.filter(
-                adj => adj.createdAt >= sixMonthsAgoStr
-            );
-            
-            if (window.salesSystem.data.stockAdjustments.length !== oldCount) {
-                console.log(`تم حذف ${oldCount - window.salesSystem.data.stockAdjustments.length} سجل تعديل مخزون قديم`);
-                window.salesSystem.saveData();
-            }
-        }
-    }
-}, 24 * 60 * 60 * 1000); // Run daily
-
-// Export for module systems
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
     module.exports = AdvancedSalesManagementSystem;
 }
 
-// Add final system ready indicator
-window.addEventListener('load', function() {
-    setTimeout(() => {
-        console.log(`
-🎯 نظام Tag ElMalek v2.1 محمل ومجهز بالكامل:
-✅ النظام الأساسي مع حماية بكلمة مرور
-✅ واجهة المستخدم المتطورة
-✅ معالجة الأخطاء المحسنة  
-✅ مراقبة الأداء التلقائية
-✅ دعم إمكانية الوصول الكامل
-✅ دعم RTL والعربية
-✅ إدارة الثيمات المتقدمة
-✅ اختصارات لوحة المفاتيح
-✅ نظام النسخ الاحتياطي الآمن
-✅ تكامل التليجرام المطور
-✅ نظام الإشعارات المتقدم
-✅ الحماية الأمنية بكلمة المرور
-
-🔐 مميزات الحماية الجديدة:
-• حماية إضافة/تعديل/حذف المنتجات
-• حماية إضافة/تعديل/حذف المبيعات  
-• حماية إضافة/تعديل/حذف الاتفاقات
-• حماية تعديل المخزون
-• حماية تصدير/استيراد البيانات
-• حماية إعدادات النظام
-• نافذة أمان متطورة مع إظهار/إخفاء كلمة المرور
-• إمكانية تعطيل الحماية بترك كلمة المرور فارغة
-
-🚀 نظام Tag ElMalek v2.1 جاهز للاستخدام الإنتاجي الآمن!
-        `);
-        
-        // Final performance check
-        if (performance.now() > 3000) {
-            console.warn('⚠️ زمن التحميل أطول من المتوقع - يرجى فحص الاتصال');
-        } else {
-            console.log('⚡ تم التحميل بسرعة مثلى مع الحماية الأمنية');
-        }
-        
-    }, 2000);
-});
-
 console.log(`
-🏷️ Tag ElMalek Advanced Sales Management System v2.1 🔐
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ النظام محمل ومحمي بكلمة مرور (إصدار آمن)
-🔐 حماية أمنية شاملة للعمليات الحساسة
-📱 واجهة مستجيبة وسريعة مع أمان متقدم
-🔧 مميزات متطورة ومحسنة مع الحماية
-💾 حفظ تلقائي آمن كل 3 دقائق
-🔔 نظام إشعارات متكامل (بدون منبثقات)
-📊 تقارير وإحصائيات متقدمة مع الحماية
-🔒 نسخ احتياطية آمنة ومحمية
-📱 دعم تكامل التليجرام المحسن
-🛡️ حماية شاملة: إضافة/تعديل/حذف/تصدير
-🚀 جاهز للاستخدام الإنتاجي الآمن
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏷️ ================================================
+   Tag ElMalek Sales Management System v2.1
+   تم التحميل بنجاح | نظام إدارة المبيعات المتقدم
+================================================ 🏷️
 `);
-
-
 
