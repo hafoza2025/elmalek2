@@ -90,149 +90,199 @@ class AdvancedSalesManagementSystem {
     // PASSWORD PROTECTION SYSTEM
     // =============================================
     
-    async verifyPassword(promptText = 'MMMMMMMMMM') {
-        const password = this.data.settings.password;
-        if (!password || password.trim() === '') {
-            // لا توجد كلمة مرور محددة، السماح بالتنفيذ
-            return true;
-        }
-        
-        return new Promise((resolve) => {
-            const modalId = 'passwordModal_' + Date.now();
-            const modalHtml = `
-                <div id="${modalId}" class="modal" style="display: block; z-index: 10000;">
-                    <div class="modal-content modal-sm">
-                        <div class="modal-header">
-                            <h3 style="color: #667eea; margin: 0;">
-                                <i class="fas fa-lock"></i> الحماية الأمنية
-                            </h3>
-                        </div>
-                        <div class="modal-body">
-                            <div class="password-prompt-container">
-                                <p style="margin-bottom: 15px; color: #374151; font-weight: 500;">
-                                    <i class="fas fa-shield-alt" style="color: #f59e0b; margin-left: 8px;"></i>
-                                    ${promptText}
-                                </p>
-                                <div class="password-input-group">
-                                    <input type="password" 
-                                           id="adminPasswordInput_${modalId}" 
-                                           class="form-control" 
-                                           placeholder="كلمة المرور..."
-                                           style="padding: 12px; font-size: 16px; border-radius: 8px; border: 2px solid #e2e8f0;"
-                                           autofocus>
-                                    <button type="button" 
-                                            id="togglePassword_${modalId}"
-                                            class="password-toggle-btn"
-                                            style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #6b7280; cursor: pointer;"
-                                            onclick="togglePasswordVisibility('${modalId}')">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </div>
-                                <div id="passwordError_${modalId}" 
-                                     style="color: #ef4444; font-size: 13px; margin-top: 8px; display: none; padding: 8px; background: #fef2f2; border-radius: 4px; border-left: 4px solid #ef4444;">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    <span id="errorText_${modalId}">كلمة المرور غير صحيحة!</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button class="btn btn-primary" 
-                                    onclick="confirmPassword_${modalId}()"
-                                    style="padding: 10px 20px; font-weight: 600;">
-                                <i class="fas fa-check"></i> تأكيد
-                            </button>
-                            <button class="btn btn-secondary" 
-                                    onclick="cancelPassword_${modalId}()"
-                                    style="padding: 10px 20px;">
-                                <i class="fas fa-times"></i> إلغاء
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <style>
-                    .password-input-group {
-                        position: relative;
-                        margin-bottom: 15px;
-                    }
-                    .password-toggle-btn:hover {
-                        color: #374151 !important;
-                    }
-                    #${modalId} .modal-content {
-                        animation: fadeInModal 0.3s ease;
-                        border-radius: 12px;
-                        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-                    }
-                </style>
-                
-                <script>
-                    function togglePasswordVisibility(modalId) {
-                        const input = document.getElementById('adminPasswordInput_' + modalId);
-                        const icon = document.querySelector('#togglePassword_' + modalId + ' i');
-                        
-                        if (input.type === 'password') {
-                            input.type = 'text';
-                            icon.className = 'fas fa-eye-slash';
-                        } else {
-                            input.type = 'password';
-                            icon.className = 'fas fa-eye';
-                        }
-                    }
-                    
-                    function confirmPassword_${modalId}() {
-                        const input = document.getElementById('adminPasswordInput_${modalId}');
-                        const errorDiv = document.getElementById('passwordError_${modalId}');
-                        const errorText = document.getElementById('errorText_${modalId}');
-                        
-                        if (input.value === "${password.replace(/"/g, '\\"').replace(/\\/g, '\\\\')}") {
-                            document.getElementById('${modalId}').remove();
-                            resolve(true);
-                        } else {
-                            errorText.textContent = input.value.trim() === '' ? 'يرجى إدخال كلمة المرور!' : 'كلمة المرور غير صحيحة!';
-                            errorDiv.style.display = 'block';
-                            input.focus();
-                            input.select();
-                            
-                            // اهتزاز بصري للخطأ
-                            input.style.animation = 'shake 0.5s ease-in-out';
-                            setTimeout(() => {
-                                input.style.animation = '';
-                            }, 500);
-                        }
-                    }
-                    
-                    function cancelPassword_${modalId}() {
-                        document.getElementById('${modalId}').remove();
-                        resolve(false);
-                    }
-                    
-                    // دعم Enter للتأكيد و Escape للإلغاء
-                    document.getElementById('adminPasswordInput_${modalId}').addEventListener('keydown', function(e) {
-                        if (e.key === "Enter") {
-                            e.preventDefault();
-                            confirmPassword_${modalId}();
-                        } else if (e.key === "Escape") {
-                            e.preventDefault();
-                            cancelPassword_${modalId}();
-                        }
-                    });
-                    
-                    // إخفاء رسالة الخطأ عند الكتابة
-                    document.getElementById('adminPasswordInput_${modalId}').addEventListener('input', function() {
-                        document.getElementById('passwordError_${modalId}').style.display = 'none';
-                    });
-                    
-                    // تركيز تلقائي على حقل كلمة المرور
-                    setTimeout(() => {
-                        document.getElementById('adminPasswordInput_${modalId}').focus();
-                    }, 100);
-                <\/script>
-            `;
-            
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-            document.body.style.overflow = 'hidden';
-        });
+ async verifyPassword(promptText = 'أدخل كلمة المرور للمتابعة') {
+    const password = this.data.settings.password;
+    if (!password || password.trim() === '') {
+        // لا توجد كلمة مرور محددة، السماح بالتنفيذ
+        return true;
     }
+    
+    return new Promise((resolve) => {
+        const modalId = 'passwordModal_' + Date.now();
+        
+        // إنشاء العنصر مباشرة بدلاً من HTML string
+        const modal = document.createElement('div');
+        modal.id = modalId;
+        modal.className = 'modal';
+        modal.style.cssText = 'display: block; z-index: 10000;';
+        
+        // إنشاء محتوى النافذة
+        const modalContent = document.createElement('div');
+        modalContent.className = 'modal-content modal-sm';
+        modalContent.style.cssText = `
+            animation: fadeInModal 0.3s ease;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        `;
+        
+        // Header
+        const header = document.createElement('div');
+        header.className = 'modal-header';
+        header.innerHTML = `
+            <h3 style="color: #667eea; margin: 0;">
+                <i class="fas fa-lock"></i> الحماية الأمنية
+            </h3>
+        `;
+        
+        // Body
+        const body = document.createElement('div');
+        body.className = 'modal-body';
+        
+        // Message
+        const message = document.createElement('p');
+        message.style.cssText = 'margin-bottom: 15px; color: #374151; font-weight: 500;';
+        message.innerHTML = `
+            <i class="fas fa-shield-alt" style="color: #f59e0b; margin-left: 8px;"></i>
+            ${promptText}
+        `;
+        
+        // Input container
+        const inputContainer = document.createElement('div');
+        inputContainer.style.cssText = 'position: relative; margin-bottom: 15px;';
+        
+        // Password input
+        const passwordInput = document.createElement('input');
+        passwordInput.type = 'password';
+        passwordInput.id = `adminPasswordInput_${modalId}`;
+        passwordInput.className = 'form-control';
+        passwordInput.placeholder = 'كلمة المرور...';
+        passwordInput.style.cssText = 'padding: 12px; font-size: 16px; border-radius: 8px; border: 2px solid #e2e8f0; width: 100%; box-sizing: border-box;';
+        passwordInput.autofocus = true;
+        
+        // Toggle button
+        const toggleButton = document.createElement('button');
+        toggleButton.type = 'button';
+        toggleButton.style.cssText = 'position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #6b7280; cursor: pointer;';
+        toggleButton.innerHTML = '<i class="fas fa-eye"></i>';
+        
+        // Error message
+        const errorDiv = document.createElement('div');
+        errorDiv.id = `passwordError_${modalId}`;
+        errorDiv.style.cssText = 'color: #ef4444; font-size: 13px; margin-top: 8px; display: none; padding: 8px; background: #fef2f2; border-radius: 4px; border-left: 4px solid #ef4444;';
+        errorDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <span>كلمة المرور غير صحيحة!</span>';
+        
+        // Footer
+        const footer = document.createElement('div');
+        footer.className = 'modal-footer';
+        
+        // Confirm button
+        const confirmBtn = document.createElement('button');
+        confirmBtn.className = 'btn btn-primary';
+        confirmBtn.style.cssText = 'padding: 10px 20px; font-weight: 600; margin-left: 8px;';
+        confirmBtn.innerHTML = '<i class="fas fa-check"></i> تأكيد';
+        
+        // Cancel button
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-secondary';
+        cancelBtn.style.cssText = 'padding: 10px 20px;';
+        cancelBtn.innerHTML = '<i class="fas fa-times"></i> إلغاء';
+        
+        // إضافة CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInModal {
+                from { opacity: 0; transform: scale(0.9); }
+                to { opacity: 1; transform: scale(1); }
+            }
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                20%, 40%, 60%, 80% { transform: translateX(5px); }
+            }
+        `;
+        
+        // تجميع العناصر
+        inputContainer.appendChild(passwordInput);
+        inputContainer.appendChild(toggleButton);
+        
+        body.appendChild(message);
+        body.appendChild(inputContainer);
+        body.appendChild(errorDiv);
+        
+        footer.appendChild(confirmBtn);
+        footer.appendChild(cancelBtn);
+        
+        modalContent.appendChild(header);
+        modalContent.appendChild(body);
+        modalContent.appendChild(footer);
+        
+        modal.appendChild(modalContent);
+        
+        // إضافة النافذة والستايل للصفحة
+        document.head.appendChild(style);
+        document.body.appendChild(modal);
+        document.body.style.overflow = 'hidden';
+        
+        // الأحداث
+        
+        // إظهار/إخفاء كلمة المرور
+        toggleButton.addEventListener('click', function() {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        });
+        
+        // دالة التحقق
+        const checkPassword = function() {
+            if (passwordInput.value === password) {
+                modal.remove();
+                style.remove();
+                document.body.style.overflow = '';
+                resolve(true);
+            } else {
+                const errorText = passwordInput.value.trim() === '' ? 
+                    'يرجى إدخال كلمة المرور!' : 'كلمة المرور غير صحيحة!';
+                errorDiv.querySelector('span').textContent = errorText;
+                errorDiv.style.display = 'block';
+                passwordInput.focus();
+                passwordInput.select();
+                
+                // اهتزاز بصري
+                passwordInput.style.animation = 'shake 0.5s ease-in-out';
+                setTimeout(() => {
+                    passwordInput.style.animation = '';
+                }, 500);
+            }
+        };
+        
+        // دالة الإلغاء
+        const cancelPassword = function() {
+            modal.remove();
+            style.remove();
+            document.body.style.overflow = '';
+            resolve(false);
+        };
+        
+        // ربط الأحداث
+        confirmBtn.addEventListener('click', checkPassword);
+        cancelBtn.addEventListener('click', cancelPassword);
+        
+        // دعم لوحة المفاتيح
+        passwordInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                checkPassword();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                cancelPassword();
+            }
+        });
+        
+        // إخفاء رسالة الخطأ عند الكتابة
+        passwordInput.addEventListener('input', function() {
+            errorDiv.style.display = 'none';
+        });
+        
+        // تركيز تلقائي
+        setTimeout(() => {
+            passwordInput.focus();
+        }, 100);
+    });
+}
 
     // =============================================
     // SYSTEM INITIALIZATION
@@ -5997,5 +6047,6 @@ console.log(`
 🚀 جاهز للاستخدام الإنتاجي الآمن
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `);
+
 
 
