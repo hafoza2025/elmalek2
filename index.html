@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tag ElMalek - نظام إدارة المبيعات والاتفاقات المطور</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>جاري تحميل النظام...</p>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <i class="fas fa-crown"></i>
+            <h2>Tag ElMalek</h2>
+            <p class="logo-subtitle">نظام إدارة المبيعات والاتفاقات</p>
+        </div>
+        <nav class="nav-menu">
+            <a href="#" class="nav-item active" data-section="dashboard">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>لوحة التحكم</span>
+            </a>
+            <a href="#" class="nav-item" data-section="sales">
+                <i class="fas fa-shopping-cart"></i>
+                <span>المبيعات</span>
+                <span class="nav-badge" id="salesBadge">0</span>
+            </a>
+            <a href="#" class="nav-item" data-section="contracts">
+                <i class="fas fa-file-contract"></i>
+                <span>الاتفاقات</span>
+                <span class="nav-badge" id="contractsBadge">0</span>
+            </a>
+            <a href="#" class="nav-item" data-section="customers">
+                <i class="fas fa-users"></i>
+                <span>العملاء</span>
+                <span class="nav-badge" id="customersBadge">0</span>
+            </a>
+            <a href="#" class="nav-item" data-section="products">
+                <i class="fas fa-box"></i>
+                <span>المنتجات</span>
+                <span class="nav-badge" id="productsBadge">0</span>
+            </a>
+            <a href="#" class="nav-item" data-section="reports">
+                <i class="fas fa-chart-bar"></i>
+                <span>التقارير</span>
+            </a>
+            <a href="#" class="nav-item" data-section="settings">
+                <i class="fas fa-cog"></i>
+                <span>الإعدادات</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="system-info">
+                <small>الإصدار 2.0</small>
+                <small id="lastSave">آخر حفظ: الآن</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 id="pageTitle">لوحة التحكم</h1>
+                <div class="breadcrumb" id="breadcrumb">
+                    <span>الرئيسية</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="header-actions">
+                    <button class="header-btn" onclick="exportData()" title="تصدير البيانات">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="header-btn" onclick="showBackupOptions()" title="النسخ الاحتياطي">
+                        <i class="fas fa-shield-alt"></i>
+                    </button>
+                    <div class="notification-center">
+                        <button class="header-btn notification-btn" onclick="showNotifications()">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-count" id="notificationCount">0</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=مدير+النظام&background=667eea&color=fff&size=40"
+                        alt="User Avatar" class="user-avatar">
+                    <div class="user-info">
+                        <span class="user-name">مدير النظام</span>
+                        <small class="user-role">المشرف العام</small>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section active">
+            <div class="section-header">
+                <h2>لوحة التحكم الرئيسية</h2>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="showQuickActions()">
+                        <i class="fas fa-plus"></i>
+                        إضافة سريعة
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshDashboard()">
+                        <i class="fas fa-sync-alt"></i>
+                        تحديث
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="stats-grid">
+                <div class="stat-card-advanced">
+                    <div class="stat-header">
+                        <h3 class="stat-title">إجمالي المبيعات</h3>
+                        <div class="stat-icon-advanced" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="totalSalesValue">0 ج.م</div>
+                    <div class="stat-change-advanced stat-change-positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+12% من الشهر الماضي</span>
+                    </div>
+                </div>
+
+                <div class="stat-card-advanced">
+                    <div class="stat-header">
+                        <h3 class="stat-title">الاتفاقات النشطة</h3>
+                        <div class="stat-icon-advanced" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="activeContractsValue">0</div>
+                    <div class="stat-change-advanced stat-change-positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+5 هذا الأسبوع</span>
+                    </div>
+                </div>
+
+                <div class="stat-card-advanced">
+                    <div class="stat-header">
+                        <h3 class="stat-title">العملاء الجدد</h3>
+                        <div class="stat-icon-advanced" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="newCustomersValue">0</div>
+                    <div class="stat-change-advanced stat-change-positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+8 هذا الشهر</span>
+                    </div>
+                </div>
+
+                <div class="stat-card-advanced">
+                    <div class="stat-header">
+                        <h3 class="stat-title">مبيعات اليوم</h3>
+                        <div class="stat-icon-advanced" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="todaySalesValue">0 ج.م</div>
+                    <div class="stat-change-advanced stat-change-neutral">
+                        <i class="fas fa-equals"></i>
+                        <span>نشاط اليوم</span>
+                    </div>
+                </div>
+
+                <div class="stat-card-advanced">
+                    <div class="stat-header">
+                        <h3 class="stat-title">مبيعات الأسبوع</h3>
+                        <div class="stat-icon-advanced" style="background: linear-gradient(135deg, #ff7675, #fd79a8);">
+                            <i class="fas fa-calendar-week"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="weekSalesValue">0 ج.م</div>
+                    <div class="stat-change-advanced stat-change-positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>هذا الأسبوع</span>
+                    </div>
+                </div>
+
+                <div class="stat-card-advanced">
+                    <div class="stat-header">
+                        <h3 class="stat-title">نسبة النمو</h3>
+                        <div class="stat-icon-advanced" style="background: linear-gradient(135deg, #00b894, #00cec9);">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">15%</div>
+                    <div class="stat-change-advanced stat-change-positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>مقارنة بالعام الماضي</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts and Activities -->
+            <div class="dashboard-content">
+                <div class="chart-container">
+                    <h3>مبيعات آخر 7 أيام</h3>
+                    <canvas id="salesChart"></canvas>
+                </div>
+                <div class="recent-activities">
+                    <div class="activities-header">
+                        <h3>الأنشطة الحديثة</h3>
+                        <button class="btn btn-sm btn-primary" onclick="viewAllActivities()">
+                            عرض الكل
+                        </button>
+                    </div>
+                    <div id="recentActivitiesList" class="activities-list">
+                        <!-- سيتم ملؤها بواسطة JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions Panel -->
+            <div class="quick-actions-panel">
+                <h3>الإجراءات السريعة</h3>
+                <div class="quick-actions-grid">
+                    <button class="quick-action-card" onclick="openModal('saleModal')">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>مبيعة جديدة</span>
+                    </button>
+                    <button class="quick-action-card" onclick="openModal('contractModal')">
+                        <i class="fas fa-handshake"></i>
+                        <span>اتفاق جديد</span>
+                    </button>
+                    <button class="quick-action-card" onclick="openModal('customerModal')">
+                        <i class="fas fa-user-plus"></i>
+                        <span>عميل جديد</span>
+                    </button>
+                    <button class="quick-action-card" onclick="openModal('productModal')">
+                        <i class="fas fa-box"></i>
+                        <span>منتج جديد</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sales Section -->
+        <section id="sales" class="section">
+            <div class="section-header">
+                <h2>إدارة المبيعات</h2>
+                <div class="section-actions">
+                    <button class="btn btn-primary" onclick="openModal('saleModal')">
+                        <i class="fas fa-plus"></i>
+                        مبيعة جديدة
+                    </button>
+                    <button class="btn btn-success" onclick="exportSalesData()">
+                        <i class="fas fa-file-excel"></i>
+                        تصدير Excel
+                    </button>
+                </div>
+            </div>
+
+            <!-- Advanced Filters -->
+            <div class="advanced-filters">
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <label>البحث:</label>
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="salesSearch" placeholder="البحث في المبيعات..."
+                                oninput="performAdvancedSearch('sales', this.value)">
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <label>من تاريخ:</label>
+                        <input type="date" id="salesDateFrom" class="date-filter">
+                    </div>
+                    <div class="filter-group">
+                        <label>إلى تاريخ:</label>
+                        <input type="date" id="salesDateTo" class="date-filter">
+                    </div>
+                    <div class="filter-group">
+                        <label>فترة سريعة:</label>
+                        <select id="salesQuickFilter" onchange="setQuickDateFilter('sales', this.value)">
+                            <option value="">اختر الفترة</option>
+                            <option value="today">اليوم</option>
+                            <option value="yesterday">أمس</option>
+                            <option value="week">هذا الأسبوع</option>
+                            <option value="last-week">الأسبوع الماضي</option>
+                            <option value="month">هذا الشهر</option>
+                            <option value="last-month">الشهر الماضي</option>
+                            <option value="quarter">هذا الربع</option>
+                            <option value="year">هذا العام</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>الحالة:</label>
+                        <select id="salesStatusFilter" onchange="applyStatusFilter('sales', this.value)">
+                            <option value="">جميع الحالات</option>
+                            <option value="مكتملة">مكتملة</option>
+                            <option value="قيد التنفيذ">قيد التنفيذ</option>
+                            <option value="ملغية">ملغية</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="filters-actions">
+                    <button class="btn btn-primary btn-sm" onclick="applyAllFilters('sales')">
+                        <i class="fas fa-filter"></i>
+                        تطبيق الفلاتر
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="clearAllFilters('sales')">
+                        <i class="fas fa-times"></i>
+                        إلغاء الفلاتر
+                    </button>
+                </div>
+            </div>
+
+            <div class="data-table-container">
+                <div class="table-header">
+                    <div class="table-info">
+                        <span id="salesCount">عدد المبيعات: 0</span>
+                        <span id="salesTotal">المجموع: 0 ج.م</span>
+                    </div>
+                    <div class="table-actions">
+                        <button class="btn btn-sm btn-outline" onclick="selectAllSales()">
+                            تحديد الكل
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteSelectedSales()" disabled
+                            id="deleteSelectedBtn">
+                            حذف المحدد
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table" id="salesTable">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAllSalesCheckbox"
+                                        onchange="toggleSelectAll('sales')">
+                                </th>
+                                <th onclick="sortTable('sales', 0)">
+                                    رقم الفاتورة
+                                    <i class="fas fa-sort"></i>
+                                </th>
+                                <th onclick="sortTable('sales', 1)">
+                                    العميل
+                                    <i class="fas fa-sort"></i>
+                                </th>
+                                <th>المنتج</th>
+                                <th onclick="sortTable('sales', 3)">
+                                    الكمية
+                                    <i class="fas fa-sort"></i>
+                                </th>
+                                <th onclick="sortTable('sales', 4)">
+                                    المبلغ
+                                    <i class="fas fa-sort"></i>
+                                </th>
+                                <th onclick="sortTable('sales', 5)">
+                                    التاريخ
+                                    <i class="fas fa-sort"></i>
+                                </th>
+                                <th>الحالة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="salesTableBody">
+                            <!-- سيتم ملؤها بواسطة JavaScript -->
+                        </tbody>
+                        <tfoot id="salesTableFooter" style="display: none;">
+                            <tr class="table-summary">
+                                <td colspan="4"><strong>المجموع الكلي:</strong></td>
+                                <td><strong id="summaryTotal">0 ج.م</strong></td>
+                                <td colspan="4"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="table-pagination">
+                    <div class="pagination-info">
+                        <span id="salesPaginationInfo">عرض 1-10 من 0 مبيعة</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <button class="pagination-btn" onclick="previousPage('sales')" disabled>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <span id="salesPageNumbers"></span>
+                        <button class="pagination-btn" onclick="nextPage('sales')" disabled>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                    </div>
+                    <div class="pagination-size">
+                        <label>عرض:</label>
+                        <select onchange="changePageSize('sales', this.value)">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span>عنصر</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contracts Section -->
+        <section id="contracts" class="section">
+            <div class="section-header">
+                <h2>إدارة الاتفاقات</h2>
+                <div class="section-actions">
+                    <button class="btn btn-primary" onclick="openModal('contractModal')">
+                        <i class="fas fa-plus"></i>
+                        اتفاق جديد
+                    </button>
+                    <button class="btn btn-warning" onclick="checkExpiringContracts()">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        الاتفاقات المنتهية قريباً
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contract Filters -->
+            <div class="advanced-filters">
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <label>البحث:</label>
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="contractsSearch" placeholder="البحث في الاتفاقات..."
+                                oninput="performAdvancedSearch('contracts', this.value)">
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <label>نوع الاتفاق:</label>
+                        <select id="contractTypeFilter">
+                            <option value="">جميع الأنواع</option>
+                            <option value="خدمات">خدمات</option>
+                            <option value="توريد">توريد</option>
+                            <option value="صيانة">صيانة</option>
+                            <option value="استشارات">استشارات</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>الحالة:</label>
+                        <select id="contractStatusFilter">
+                            <option value="">جميع الحالات</option>
+                            <option value="نشط">نشط</option>
+                            <option value="منتهي">منتهي</option>
+                            <option value="معلق">معلق</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-table-container">
+                <div class="table-responsive">
+                    <table class="data-table" id="contractsTable">
+                        <thead>
+                            <tr>
+                                <th>رقم الاتفاق</th>
+                                <th>العميل</th>
+                                <th>نوع الاتفاق</th>
+                                <th>القيمة</th>
+                                <th>تاريخ البداية</th>
+                                <th>تاريخ الانتهاء</th>
+                                <th>المدة المتبقية</th>
+                                <th>الحالة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contractsTableBody">
+                            <!-- سيتم ملؤها بواسطة JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Customers Section -->
+        <section id="customers" class="section">
+            <div class="section-header">
+                <h2>إدارة العملاء</h2>
+                <div class="section-actions">
+                    <button class="btn btn-primary" onclick="openModal('customerModal')">
+                        <i class="fas fa-plus"></i>
+                        عميل جديد
+                    </button>
+                    <button class="btn btn-info" onclick="importCustomers()">
+                        <i class="fas fa-upload"></i>
+                        استيراد عملاء
+                    </button>
+                </div>
+            </div>
+
+            <!-- Customer Filters -->
+            <div class="advanced-filters">
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <label>البحث:</label>
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="customersSearch" placeholder="البحث في العملاء..."
+                                oninput="performAdvancedSearch('customers', this.value)">
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <label>ترتيب حسب:</label>
+                        <select onchange="sortCustomers(this.value)">
+                            <option value="name">الاسم</option>
+                            <option value="totalPurchases">إجمالي المشتريات</option>
+                            <option value="registrationDate">تاريخ التسجيل</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-table-container">
+                <div class="table-responsive">
+                    <table class="data-table" id="customersTable">
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>رقم الهاتف</th>
+                                <th>البريد الإلكتروني</th>
+                                <th>الشركة</th>
+                                <th>العنوان</th>
+                                <th>إجمالي المشتريات</th>
+                                <th>عدد المبيعات</th>
+                                <th>تاريخ التسجيل</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customersTableBody">
+                            <!-- سيتم ملؤها بواسطة JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Products Section -->
+        <section id="products" class="section">
+            <div class="section-header">
+                <h2>إدارة المنتجات</h2>
+                <div class="section-actions">
+                    <button class="btn btn-primary" onclick="openModal('productModal')">
+                        <i class="fas fa-plus"></i>
+                        منتج جديد
+                    </button>
+                    <button class="btn btn-warning" onclick="showLowStockProducts()">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        مخزون منخفض
+                    </button>
+                </div>
+            </div>
+
+            <!-- Product Filters -->
+            <div class="advanced-filters">
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <label>البحث:</label>
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="productsSearch" placeholder="البحث في المنتجات..."
+                                oninput="performAdvancedSearch('products', this.value)">
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <label>الفئة:</label>
+                        <select id="productCategoryFilter">
+                            <option value="">جميع الفئات</option>
+                            <option value="إلكترونيات">إلكترونيات</option>
+                            <option value="ملابس">ملابس</option>
+                            <option value="أدوات منزلية">أدوات منزلية</option>
+                            <option value="كتب">كتب</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>الحالة:</label>
+                        <select id="productStatusFilter">
+                            <option value="">جميع الحالات</option>
+                            <option value="متاح">متاح</option>
+                            <option value="غير متاح">غير متاح</option>
+                            <option value="مخزون منخفض">مخزون منخفض</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-table-container">
+                <div class="table-responsive">
+                    <table class="data-table" id="productsTable">
+                        <thead>
+                            <tr>
+                                <th>اسم المنتج</th>
+                                <th>الكود</th>
+                                <th>السعر</th>
+                                <th>الكمية المتاحة</th>
+                                <th>الحد الأدنى</th>
+                                <th>الفئة</th>
+                                <th>الحالة</th>
+                                <th>إجمالي المبيعات</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                            <!-- سيتم ملؤها بواسطة JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reports Section -->
+        <section id="reports" class="section">
+            <div class="section-header">
+                <h2>التقارير والإحصائيات المتقدمة</h2>
+                <div class="section-actions">
+                    <button class="btn btn-primary" onclick="generateCustomReport()">
+                        <i class="fas fa-chart-line"></i>
+                        تقرير مخصص
+                    </button>
+                    <button class="btn btn-success" onclick="exportAllReports()">
+                        <i class="fas fa-file-pdf"></i>
+                        تصدير PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Report Types -->
+            <div class="reports-navigation">
+                <button class="report-tab active" onclick="showReportTab('daily')">التقارير اليومية</button>
+                <button class="report-tab" onclick="showReportTab('weekly')">التقارير الأسبوعية</button>
+                <button class="report-tab" onclick="showReportTab('monthly')">التقارير الشهرية</button>
+                <button class="report-tab" onclick="showReportTab('yearly')">التقارير السنوية</button>
+                <button class="report-tab" onclick="showReportTab('advanced')">التقارير المتقدمة</button>
+            </div>
+
+            <!-- Daily Reports -->
+            <div id="dailyReports" class="report-content active">
+                <div class="report-period-selector">
+                    <label>اختر التاريخ:</label>
+                    <input type="date" id="dailyReportDate" onchange="updateDailyReport()">
+                    <button class="btn btn-sm btn-primary" onclick="setToday()">اليوم</button>
+                    <button class="btn btn-sm btn-secondary" onclick="setYesterday()">أمس</button>
+                </div>
+
+                <div class="daily-stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="stat-details">
+                            <h4>مبيعات اليوم</h4>
+                            <p class="stat-value" id="dailySalesAmount">0 ج.م</p>
+                            <small id="dailySalesCount">0 مبيعة</small>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-details">
+                            <h4>عملاء جدد</h4>
+                            <p class="stat-value" id="dailyNewCustomers">0</p>
+                            <small>عميل جديد</small>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <div class="stat-details">
+                            <h4>اتفاقات جديدة</h4>
+                            <p class="stat-value" id="dailyNewContracts">0</p>
+                            <small>اتفاق جديد</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="daily-chart-container">
+                    <canvas id="dailyHourlyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Weekly Reports -->
+            <div id="weeklyReports" class="report-content">
+                <div class="report-period-selector">
+                    <label>اختر الأسبوع:</label>
+                    <input type="week" id="weeklyReportWeek" onchange="updateWeeklyReport()">
+                    <button class="btn btn-sm btn-primary" onclick="setCurrentWeek()">هذا الأسبوع</button>
+                    <button class="btn btn-sm btn-secondary" onclick="setLastWeek()">الأسبوع الماضي</button>
+                </div>
+
+                <div class="weekly-charts-grid">
+                    <div class="chart-container">
+                        <h4>مبيعات الأسبوع (يومي)</h4>
+                        <canvas id="weeklyDailyChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h4>أفضل العملاء</h4>
+                        <canvas id="weeklyCustomersChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Reports -->
+            <div id="monthlyReports" class="report-content">
+                <div class="report-period-selector">
+                    <label>اختر الشهر:</label>
+                    <input type="month" id="monthlyReportMonth" onchange="updateMonthlyReport()">
+                    <button class="btn btn-sm btn-primary" onclick="setCurrentMonth()">هذا الشهر</button>
+                </div>
+
+                <div class="monthly-overview">
+                    <div class="overview-grid">
+                        <div class="overview-card">
+                            <h4>إجمالي المبيعات</h4>
+                            <p class="overview-value" id="monthlySalesTotal">0 ج.م</p>
+                            <div class="overview-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>+15% من الشهر الماضي</span>
+                            </div>
+                        </div>
+                        <div class="overview-card">
+                            <h4>متوسط المبيعات اليومي</h4>
+                            <p class="overview-value" id="monthlyDailyAverage">0 ج.م</p>
+                        </div>
+                        <div class="overview-card">
+                            <h4>أفضل يوم مبيعات</h4>
+                            <p class="overview-value" id="monthlyBestDay">-</p>
+                            <small id="monthlyBestDayAmount">0 ج.م</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="monthly-charts">
+                    <div class="chart-container">
+                        <h4>اتجاه المبيعات الشهرية</h4>
+                        <canvas id="monthlyTrendChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h4>توزيع المنتجات</h4>
+                        <canvas id="monthlyProductsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Yearly Reports -->
+            <div id="yearlyReports" class="report-content">
+                <div class="report-period-selector">
+                    <label>اختر السنة:</label>
+                    <select id="yearlyReportYear" onchange="updateYearlyReport()">
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                    </select>
+                </div>
+
+                <div class="yearly-summary">
+                    <div class="summary-cards">
+                        <div class="summary-card">
+                            <h4>إجمالي المبيعات السنوي</h4>
+                            <p class="summary-value" id="yearlyTotalSales">0 ج.م</p>
+                        </div>
+                        <div class="summary-card">
+                            <h4>أفضل شهر</h4>
+                            <p class="summary-value" id="yearlyBestMonth">-</p>
+                        </div>
+                        <div class="summary-card">
+                            <h4>معدل النمو</h4>
+                            <p class="summary-value" id="yearlyGrowthRate">0%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="yearly-chart-container">
+                    <canvas id="yearlyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Advanced Reports -->
+            <div id="advancedReports" class="report-content">
+                <div class="advanced-report-builder">
+                    <h4>منشئ التقارير المتقدمة</h4>
+
+                    <div class="report-builder-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>نوع التقرير:</label>
+                                <select id="advancedReportType">
+                                    <option value="sales">تحليل المبيعات</option>
+                                    <option value="customers">تحليل العملاء</option>
+                                    <option value="products">تحليل المنتجات</option>
+                                    <option value="profitability">تحليل الربحية</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>الفترة الزمنية:</label>
+                                <select id="advancedReportPeriod">
+                                    <option value="custom">فترة مخصصة</option>
+                                    <option value="last30">آخر 30 يوم</option>
+                                    <option value="last90">آخر 90 يوم</option>
+                                    <option value="ytd">من بداية السنة</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row" id="customDateRange" style="display: none;">
+                            <div class="form-group">
+                                <label>من تاريخ:</label>
+                                <input type="date" id="advancedReportFromDate">
+                            </div>
+                            <div class="form-group">
+                                <label>إلى تاريخ:</label>
+                                <input type="date" id="advancedReportToDate">
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="generateAdvancedReport()">
+                                <i class="fas fa-chart-bar"></i>
+                                إنشاء التقرير
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="advancedReportResult" class="advanced-report-result" style="display: none;">
+                    <!-- سيتم ملؤها بواسطة JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings" class="section">
+            <div class="section-header">
+                <h2>إعدادات النظام</h2>
+                <div class="section-actions">
+                    <button class="btn btn-success" onclick="saveAllSettings()">
+                        <i class="fas fa-save"></i>
+                        حفظ جميع الإعدادات
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-tabs">
+                <button class="settings-tab active" onclick="showSettingsTab('telegram')">
+                    <i class="fab fa-telegram"></i>
+                    التليجرام
+                </button>
+                <button class="settings-tab" onclick="showSettingsTab('backup')">
+                    <i class="fas fa-shield-alt"></i>
+                    النسخ الاحتياطي
+                </button>
+                <button class="settings-tab" onclick="showSettingsTab('system')">
+                    <i class="fas fa-cogs"></i>
+                    النظام
+                </button>
+                <button class="settings-tab" onclick="showSettingsTab('appearance')">
+                    <i class="fas fa-palette"></i>
+                    المظهر
+                </button>
+            </div>
+
+            <!-- Telegram Settings -->
+            <div id="telegramSettings" class="settings-content active">
+                <div class="settings-card">
+                    <h3>إعدادات بوت التليجرام</h3>
+                    <p class="settings-description">قم بربط النظام ببوت التليجرام لتلقي الإشعارات الفورية</p>
+
+                    <form id="telegramSettingsForm">
+                        <div class="form-group">
+                            <label>رمز البوت (Bot Token):</label>
+                            <input type="password" id="botToken" placeholder="أدخل رمز البوت من BotFather"
+                                class="form-control">
+                            <small class="form-help">احصل على الرمز من @BotFather في التليجرام</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>معرف الدردشة (Chat ID):</label>
+                            <input type="text" id="chatId" placeholder="أدخل معرف الدردشة" class="form-control">
+                            <small class="form-help">استخدم @userinfobot للحصول على معرف الدردشة</small>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="telegramNotifications" checked>
+                                    <span class="checkmark"></span>
+                                    تفعيل الإشعارات
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-primary" onclick="saveTelegramSettings()">
+                                <i class="fas fa-save"></i>
+                                حفظ الإعدادات
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="testTelegramConnection()">
+                                <i class="fas fa-wifi"></i>
+                                اختبار الاتصال
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="settings-card">
+                    <h3>تخصيص الإشعارات</h3>
+                    <div class="notification-settings">
+                        <label class="setting-item">
+                            <input type="checkbox" id="notifySales" checked>
+                            <span>إشعار المبيعات الجديدة</span>
+                        </label>
+                        <label class="setting-item">
+                            <input type="checkbox" id="notifyContracts" checked>
+                            <span>إشعار الاتفاقات الجديدة</span>
+                        </label>
+                        <label class="setting-item">
+                            <input type="checkbox" id="notifyCustomers" checked>
+                            <span>إشعار العملاء الجدد</span>
+                        </label>
+                        <label class="setting-item">
+                            <input type="checkbox" id="notifyLowStock">
+                            <span>إشعار المخزون المنخفض</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Backup Settings -->
+            <div id="backupSettings" class="settings-content">
+                <div class="settings-card">
+                    <h3>النسخ الاحتياطي والاستعادة</h3>
+
+                    <div class="backup-section">
+                        <h4>إنشاء نسخة احتياطية</h4>
+                        <div class="backup-options">
+                            <button class="btn btn-primary" onclick="createFullBackup()">
+                                <i class="fas fa-download"></i>
+                                نسخة احتياطية كاملة
+                            </button>
+                            <button class="btn btn-secondary" onclick="exportData()">
+                                <i class="fas fa-file-export"></i>
+                                تصدير البيانات فقط
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="restore-section">
+                        <h4>استعادة النسخة الاحتياطية</h4>
+                        <div class="file-upload-area" onclick="selectBackupFile()">
+                            <div class="upload-content">
+                                <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
+                                <p class="file-upload-text">اضغط لاختيار ملف النسخة الاحتياطية</p>
+                                <small class="file-upload-subtext">يدعم ملفات JSON فقط</small>
+                            </div>
+                            <input type="file" id="backupFileInput" accept=".json" style="display: none;"
+                                onchange="restoreFromBackup(this)">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>النسخ الاحتياطي التلقائي</h3>
+                    <div class="auto-backup-settings">
+                        <label class="setting-item">
+                            <input type="checkbox" id="autoBackup">
+                            <span>تفعيل النسخ الاحتياطي التلقائي</span>
+                        </label>
+
+                        <div class="form-group">
+                            <label>تكرار النسخ الاحتياطي:</label>
+                            <select id="backupFrequency">
+                                <option value="daily">يومي</option>
+                                <option value="weekly">أسبوعي</option>
+                                <option value="monthly">شهري</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Settings -->
+            <div id="systemSettings" class="settings-content">
+                <div class="settings-card">
+                    <h3>إعدادات النظام العامة</h3>
+
+                    <div class="form-group">
+                        <label>اسم الشركة:</label>
+                        <input type="text" id="companyName" value="Tag ElMalek" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>العملة الافتراضية:</label>
+                        <select id="defaultCurrency" class="form-control">
+                            <option value="EGP">جنيه مصري (ج.م)</option>
+                            <option value="USD">دولار أمريكي ($)</option>
+                            <option value="EUR">يورو (€)</option>
+                            <option value="SAR">ريال سعودي (ر.س)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>المنطقة الزمنية:</label>
+                        <select id="timeZone" class="form-control">
+                            <option value="Africa/Cairo">القاهرة (GMT+2)</option>
+                            <option value="Asia/Riyadh">الرياض (GMT+3)</option>
+                            <option value="Asia/Dubai">دبي (GMT+4)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>تنسيق التاريخ:</label>
+                        <select id="dateFormat" class="form-control">
+                            <option value="dd/mm/yyyy">يوم/شهر/سنة</option>
+                            <option value="mm/dd/yyyy">شهر/يوم/سنة</option>
+                            <option value="yyyy-mm-dd">سنة-شهر-يوم</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>إعدادات التنبيهات</h3>
+                    <div class="alert-settings">
+                        <label class="setting-item">
+                            <input type="checkbox" id="lowStockAlert" checked>
+                            <span>تنبيه المخزون المنخفض</span>
+                        </label>
+
+                        <div class="form-group">
+                            <label>حد المخزون المنخفض:</label>
+                            <input type="number" id="lowStockThreshold" value="10" min="1" class="form-control">
+                        </div>
+
+                        <label class="setting-item">
+                            <input type="checkbox" id="contractExpiryAlert" checked>
+                            <span>تنبيه انتهاء الاتفاقات</span>
+                        </label>
+
+                        <div class="form-group">
+                            <label>التنبيه قبل انتهاء الاتفاق بـ:</label>
+                            <input type="number" id="contractAlertDays" value="30" min="1" class="form-control">
+                            <small class="form-help">عدد الأيام</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appearance Settings -->
+            <div id="appearanceSettings" class="settings-content">
+                <div class="settings-card">
+                    <h3>مظهر النظام</h3>
+
+                    <div class="theme-selector">
+                        <label>اختر المظهر:</label>
+                        <div class="theme-options">
+                            <label class="theme-option">
+                                <input type="radio" name="theme" value="light" checked>
+                                <div class="theme-preview light">
+                                    <div class="theme-header"></div>
+                                    <div class="theme-sidebar"></div>
+                                    <div class="theme-content"></div>
+                                </div>
+                                <span>المظهر الفاتح</span>
+                            </label>
+
+                            <label class="theme-option">
+                                <input type="radio" name="theme" value="dark">
+                                <div class="theme-preview dark">
+                                    <div class="theme-header"></div>
+                                    <div class="theme-sidebar"></div>
+                                    <div class="theme-content"></div>
+                                </div>
+                                <span>المظهر الداكن</span>
+                            </label>
+
+                            <label class="theme-option">
+                                <input type="radio" name="theme" value="auto">
+                                <div class="theme-preview auto">
+                                    <div class="theme-header"></div>
+                                    <div class="theme-sidebar"></div>
+                                    <div class="theme-content"></div>
+                                </div>
+                                <span>تلقائي</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>حجم الخط:</label>
+                        <select id="fontSize" class="form-control">
+                            <option value="small">صغير</option>
+                            <option value="medium" selected>متوسط</option>
+                            <option value="large">كبير</option>
+                        </select>
+                    </div>
+
+                    <div class="color-scheme">
+                        <label>لون النظام الأساسي:</label>
+                        <div class="color-options">
+                            <label class="color-option">
+                                <input type="radio" name="primaryColor" value="blue" checked>
+                                <span class="color-preview blue"></span>
+                                <span>أزرق</span>
+                            </label>
+                            <label class="color-option">
+                                <input type="radio" name="primaryColor" value="green">
+                                <span class="color-preview green"></span>
+                                <span>أخضر</span>
+                            </label>
+                            <label class="color-option">
+                                <input type="radio" name="primaryColor" value="purple">
+                                <span class="color-preview purple"></span>
+                                <span>بنفسجي</span>
+                            </label>
+                            <label class="color-option">
+                                <input type="radio" name="primaryColor" value="red">
+                                <span class="color-preview red"></span>
+                                <span>أحمر</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>تخطيط الشاشة</h3>
+
+                    <div class="layout-settings">
+                        <label class="setting-item">
+                            <input type="checkbox" id="sidebarCollapsed">
+                            <span>طي الشريط الجانبي افتراضياً</span>
+                        </label>
+
+                        <label class="setting-item">
+                            <input type="checkbox" id="compactMode">
+                            <span>الوضع المضغوط</span>
+                        </label>
+
+                        <label class="setting-item">
+                            <input type="checkbox" id="animationsEnabled" checked>
+                            <span>تفعيل الحركات والانتقالات</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Sale Modal -->
+    <div id="saleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>إضافة مبيعة جديدة</h2>
+                <span class="close" onclick="closeModal('saleModal')">&times;</span>
+            </div>
+            <form id="saleForm" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group form-floating">
+                        <select id="saleCustomer" required class="form-control">
+                            <option value="">اختر العميل</option>
+                        </select>
+                        <label>العميل *</label>
+                    </div>
+                    <div class="form-group form-floating">
+                        <select id="saleProduct" required class="form-control">
+                            <option value="">اختر المنتج</option>
+                        </select>
+                        <label>المنتج *</label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group form-floating">
+                        <input type="number" id="saleQuantity" min="1" required class="form-control" placeholder=" ">
+                        <label>الكمية *</label>
+                    </div>
+                    <div class="form-group form-floating">
+                        <input type="number" id="salePrice" step="0.01" required class="form-control" placeholder=" ">
+                        <label>السعر *</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>تاريخ المبيعة:</label>
+                    <input type="datetime-local" id="saleDate" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label>طريقة الدفع:</label>
+                    <select id="salePaymentMethod" class="form-control">
+                        <option value="cash">نقدي</option>
+                        <option value="credit">آجل</option>
+                        <option value="card">بطاقة ائتمان</option>
+                        <option value="transfer">حوالة بنكية</option>
+                    </select>
+                </div>
+
+                <div class="form-group form-floating">
+                    <textarea id="saleNotes" rows="3" class="form-control" placeholder=" "></textarea>
+                    <label>ملاحظات</label>
+                </div>
+
+                <div class="sale-summary">
+                    <div class="summary-row">
+                        <span>المجموع الفرعي:</span>
+                        <span id="saleSubtotal">0.00 ج.م</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>الضريبة (14%):</span>
+                        <span id="saleTax">0.00 ج.م</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>المجموع الكلي:</span>
+                        <span id="saleTotal">0.00 ج.م</span>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('saleModal')">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        إضافة المبيعة
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Contract Modal -->
+    <div id="contractModal" class="modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2>إضافة اتفاق جديد</h2>
+                <span class="close" onclick="closeModal('contractModal')">&times;</span>
+            </div>
+            <form id="contractForm" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group form-floating">
+                        <select id="contractCustomer" required class="form-control">
+                            <option value="">اختر العميل</option>
+                        </select>
+                        <label>العميل *</label>
+                    </div>
+                    <div class="form-group form-floating">
+                        <select id="contractType" required class="form-control">
+                            <option value="">اختر النوع</option>
+                            <option value="خدمات">خدمات</option>
+                            <option value="توريد">توريد</option>
+                            <option value="صيانة">صيانة</option>
+                            <option value="استشارات">استشارات</option>
+                            <option value="تطوير">تطوير</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+                        <label>نوع الاتفاق *</label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group form-floating">
+                        <input type="number" id="contractValue" step="0.01" required class="form-control"
+                            placeholder=" ">
+                        <label>قيمة الاتفاق *</label>
+                    </div>
+                    <div class="form-group form-floating">
+                        <input type="number" id="contractDuration" min="1" required class="form-control"
+                            placeholder=" ">
+                        <label>المدة (بالشهور) *</label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>تاريخ البداية *:</label>
+                        <input type="date" id="contractStartDate" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>تاريخ الانتهاء *:</label>
+                        <input type="date" id="contractEndDate" required class="form-control">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>حالة الاتفاق:</label>
+                    <select id="contractStatus" class="form-control">
+                        <option value="نشط">نشط</option>
+                        <option value="معلق">معلق</option>
+                        <option value="منتهي">منتهي</option>
+                    </select>
+                </div>
+
+                <div class="form-group form-floating">
+                    <textarea id="contractDetails" rows="4" required class="form-control" placeholder=" "></textarea>
+                    <label>تفاصيل الاتفاق *</label>
+                </div>
+
+                <div class="form-group form-floating">
+                    <textarea id="contractTerms" rows="3" class="form-control" placeholder=" "></textarea>
+                    <label>الشروط والأحكام</label>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('contractModal')">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        إضافة الاتفاق
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customer Modal -->
+    <div id="customerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>إضافة عميل جديد</h2>
+                <span class="close" onclick="closeModal('customerModal')">&times;</span>
+            </div>
+            <form id="customerForm" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group form-floating">
+                        <input type="text" id="customerName" required class="form-control" placeholder=" ">
+                        <label>الاسم الكامل *</label>
+                    </div>
+                    <div class="form-group form-floating">
+                        <input type="tel" id="customerPhone" required class="form-control" placeholder=" ">
+                        <label>رقم الهاتف *</label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group form-floating">
+                        <input type="email" id="customerEmail" class="form-control" placeholder=" ">
+                        <label>البريد الإلكتروني</label>
+                    </div>
+                    <div class="form-group form-floating">
+                        <input type="text" id="customerCompany" class="form-control" placeholder=" ">
+                        <label>الشركة</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>نوع العميل:</label>
+                    <select id="customerType" class="form-control">
+                        <option value="individual">فرد</option>
+                        <option value="company">شركة</option>
+                        <option value="government">جهة حكومية</option>
+                    </select>
+                </div>
+
+                <div class="form-group form-floating">
+                    <textarea id="customerAddress" rows="3" class="form-control" placeholder=" "></textarea>
+                    <label>العنوان</label>
+                </div>
+
+                <div class="form-group form-floating">
+                    <textarea id="customerNotes" rows="2" class="form-control" placeholder=" "></textarea>
+                    <label>ملاحظات</label>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('customerModal')">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        إضافة العميل
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>إضافة منتج جديد</h2>
+                <span class="close" onclick="closeModal('productModal')">&times;</span>
+            </div>
+            <form id="productForm" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group form-floating">
+                        <input type="text" id="productName" required class="form-control" placeholder=" ">
+                        <label>اسم المنتج *</label>
+                    </div>
+                    <div class="form-group form-floating">
+                        <input type="text" id="productCode" required class="form-control" placeholder=" ">
+                        <label>كود المنتج *</label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group form-floating">
+                        <input type="number" id="productPrice" step="0.01" required class="form-control"
+                            placeholder=" ">
+                        <label>السعر *</label>
+                    </div>
+                    <div class="form-group form-floating">
+                        <input type="number" id="productCost" step="0.01" class="form-control" placeholder=" ">
+                        <label>سعر التكلفة</label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group form-floating">
+                        <input type="number" id="productStock" min="0" required class="form-control" placeholder=" ">
+                        <label>الكمية المتاحة *</label>
+                    </div>
+                    <div class="form-group form-floating">
+                        <input type="number" id="productMinStock" min="0" class="form-control" placeholder=" ">
+                        <label>الحد الأدنى للمخزون</label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>الفئة:</label>
+                        <select id="productCategory" required class="form-control">
+                            <option value="">اختر الفئة</option>
+                            <option value="إلكترونيات">إلكترونيات</option>
+                            <option value="ملابس">ملابس</option>
+                            <option value="أدوات منزلية">أدوات منزلية</option>
+                            <option value="كتب">كتب</option>
+                            <option value="رياضة">رياضة</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>وحدة القياس:</label>
+                        <select id="productUnit" class="form-control">
+                            <option value="قطعة">قطعة</option>
+                            <option value="كيلو">كيلو</option>
+                            <option value="متر">متر</option>
+                            <option value="لتر">لتر</option>
+                            <option value="علبة">علبة</option>
+                            <option value="عبوة">عبوة</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group form-floating">
+                    <textarea id="productDescription" rows="3" class="form-control" placeholder=" "></textarea>
+                    <label>وصف المنتج</label>
+                </div>
+
+                <div class="product-profit-info">
+                    <div class="profit-row">
+                        <span>هامش الربح:</span>
+                        <span id="productProfitMargin">0%</span>
+                    </div>
+                    <div class="profit-row">
+                        <span>الربح المتوقع:</span>
+                        <span id="productExpectedProfit">0.00 ج.م</span>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('productModal')">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        إضافة المنتج
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quick Actions Floating Panel -->
+    <div class="quick-actions-floating">
+        <button class="quick-action-btn main-btn" onclick="toggleQuickActions()" title="الإجراءات السريعة">
+            <i class="fas fa-plus"></i>
+        </button>
+        <div class="quick-action-menu" id="quickActionMenu">
+            <button class="quick-action-item" onclick="openModal('saleModal')" title="مبيعة جديدة">
+                <i class="fas fa-shopping-cart"></i>
+            </button>
+            <button class="quick-action-item" onclick="openModal('contractModal')" title="اتفاق جديد">
+                <i class="fas fa-handshake"></i>
+            </button>
+            <button class="quick-action-item" onclick="openModal('customerModal')" title="عميل جديد">
+                <i class="fas fa-user-plus"></i>
+            </button>
+            <button class="quick-action-item" onclick="openModal('productModal')" title="منتج جديد">
+                <i class="fas fa-box"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+    <script src="helper-functions.js"></script>
+
+    <!-- Initialize System -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Hide loading overlay after initialization
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }, 1500);
+        });
+    </script>
+</body>
+
+</html>
