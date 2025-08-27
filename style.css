@@ -3088,4 +3088,274 @@ mark {
 
 
 
+/* إضافة هذه الأنماط في ملف style.css */
+
+/* Login Modal Styles */
+.login-modal {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    backdrop-filter: blur(10px);
+}
+
+.login-container {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    max-width: 400px;
+    width: 100%;
+    animation: slideInDown 0.5s ease;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.login-header .company-logo {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.login-header h1 {
+    color: #667eea;
+    margin-bottom: 0.5rem;
+    font-size: 2rem;
+}
+
+.login-header p {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.login-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.login-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.password-input {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.password-toggle:hover {
+    color: #374151;
+}
+
+.help-text {
+    color: #6b7280;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+.checkbox-container input {
+    margin-left: 8px;
+}
+
+.login-btn {
+    height: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 25px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.login-attempts {
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 15px;
+    color: #dc2626;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.login-footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.version-info {
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.default-accounts h4 {
+    font-size: 0.9rem;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.account-info {
+    background: #f3f4f6;
+    padding: 8px;
+    border-radius: 6px;
+    margin-bottom: 5px;
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+/* User Info Bar */
+.user-info-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.user-details {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar {
+    font-size: 2rem;
+    color: #667eea;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #374151;
+}
+
+.user-role {
+    font-size: 0.8rem;
+    color: #6b7280;
+    padding: 2px 8px;
+    background: #f3f4f6;
+    border-radius: 12px;
+    display: inline-block;
+    margin-top: 2px;
+}
+
+.user-role.admin {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.user-role.employee {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.user-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Adjustments when user is logged in */
+body.logged-in {
+    padding-top: 70px;
+}
+
+body.logged-in .sidebar {
+    top: 70px;
+    height: calc(100vh - 70px);
+}
+
+body.logged-in .main-content {
+    padding-top: 20px;
+}
+
+/* Restricted Element Styles */
+.restricted {
+    opacity: 0.5;
+    pointer-events: none;
+    position: relative;
+}
+
+.restricted::before {
+    content: "🔒";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    z-index: 10;
+    white-space: nowrap;
+}
+
+.restricted-section {
+    background: #fee2e2;
+    border: 2px dashed #fca5a5;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    color: #dc2626;
+}
+
+/* Animation */
+@keyframes slideInDown {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+
+
+
 /* END OF STYLES */
+
